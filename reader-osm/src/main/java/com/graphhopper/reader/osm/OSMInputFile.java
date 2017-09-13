@@ -100,8 +100,7 @@ public class OSMInputFile implements Sink, OSMInput {
         if (header[0] == 31 && header[1] == -117) {
             ips.reset();
             return new GZIPInputStream(ips, 50000);
-        } else if (header[0] == 0 && header[1] == 0 && header[2] == 0
-                && header[4] == 10 && header[5] == 9
+        } else if (header[0] == 0 && header[1] == 0 && header[2] == 0 && header[4] == 10 && header[5] == 9
                 && (header[3] == 13 || header[3] == 14)) {
             ips.reset();
             binary = true;
@@ -130,8 +129,7 @@ public class OSMInputFile implements Sink, OSMInput {
         }
     }
 
-    private void openXMLStream(InputStream in)
-            throws XMLStreamException {
+    private void openXMLStream(InputStream in) throws XMLStreamException {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         parser = factory.createXMLStreamReader(in, "UTF-8");
 
@@ -190,29 +188,24 @@ public class OSMInputFile implements Sink, OSMInput {
                     String name = parser.getLocalName();
                     long id = 0;
                     switch (name.charAt(0)) {
-                        case 'n':
-                            // note vs. node
-                            if ("node".equals(name)) {
-<<<<<<< HEAD
+                    case 'n':
+                        // note vs. node
+                        if ("node".equals(name)) {
+                            if (parser.getAttributeValue(null, "lat") != null) // Runge
+                            {
                                 id = Long.parseLong(idStr);
                                 return OSMXMLHelper.createNode(id, parser);
-=======
-                            	if (parser.getAttributeValue(null, "lat") != null) // Runge
-                            	{
-                            		id = Long.parseLong(idStr);
-                            		return OSMXMLHelper.createNode(id, parser);
-                            	}
->>>>>>> ors/master
                             }
-                            break;
-
-                        case 'w': {
-                            id = Long.parseLong(idStr);
-                            return OSMXMLHelper.createWay(id, parser);
                         }
-                        case 'r':
-                            id = Long.parseLong(idStr);
-                            return OSMXMLHelper.createRelation(id, parser);
+                        break;
+
+                    case 'w': {
+                        id = Long.parseLong(idStr);
+                        return OSMXMLHelper.createWay(id, parser);
+                    }
+                    case 'r':
+                        id = Long.parseLong(idStr);
+                        return OSMXMLHelper.createRelation(id, parser);
                     }
                 }
             }

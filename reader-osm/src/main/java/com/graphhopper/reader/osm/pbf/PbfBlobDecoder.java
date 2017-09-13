@@ -100,7 +100,7 @@ public class PbfBlobDecoder implements Runnable {
         decodedEntities.add(fileheader);
 
         // Build a new bound object which corresponds to the header.
-/*
+        /*
          Bound bound;
          if (header.hasBbox()) {
          HeaderBBox bbox = header.getBbox();
@@ -110,69 +110,49 @@ public class PbfBlobDecoder implements Runnable {
          } else {
          bound = new Bound(header.getSource());
          }
-
+        
          // Add the bound object to the results.
          decodedEntities.add(new BoundContainer(bound));
          */
     }
 
-<<<<<<< HEAD
-=======
     // Runge: add variable to reuse it multiple times
     private Map<String, String> entityTags = null;
 
->>>>>>> ors/master
     private Map<String, String> buildTags(List<Integer> keys, List<Integer> values, PbfFieldDecoder fieldDecoder) {
 
         // Ensure parallel lists are of equal size.
         if (checkData) {
             if (keys.size() != values.size()) {
-                throw new RuntimeException("Number of tag keys (" + keys.size() + ") and tag values ("
-                        + values.size() + ") don't match");
+                throw new RuntimeException(
+                        "Number of tag keys (" + keys.size() + ") and tag values (" + values.size() + ") don't match");
             }
         }
 
-<<<<<<< HEAD
-        Iterator<Integer> keyIterator = keys.iterator();
-        Iterator<Integer> valueIterator = values.iterator();
-        if (keyIterator.hasNext()) {
-            Map<String, String> tags = new HashMap<String, String>(keys.size());
-            while (keyIterator.hasNext()) {
-                String key = fieldDecoder.decodeString(keyIterator.next());
-                String value = fieldDecoder.decodeString(valueIterator.next());
-                tags.put(key, value);
-            }
-            return tags;
-        }
-=======
-    	if (entityTags == null)
-    		entityTags = new HashMap<String, String>(keys.size());
-    	else
-    		entityTags.clear();
+        if (entityTags == null)
+            entityTags = new HashMap<String, String>(keys.size());
+        else
+            entityTags.clear();
 
         Iterator<Integer> keyIterator = keys.iterator();
         Iterator<Integer> valueIterator = values.iterator();
         if (keyIterator.hasNext()) {
-        	int keyId = 1;
-            
+            int keyId = 1;
+
             while (keyIterator.hasNext()) {
-            	keyId = keyIterator.next();
-            	if (!fieldDecoder.skip(keyId))
-            	{
-            		String key = fieldDecoder.decodeString(keyId);
-            		String value = fieldDecoder.decodeString(valueIterator.next());
-            		entityTags.put(key, value);
-            	}
-            	else
-            	{
-            		valueIterator.next();
-            	}
+                keyId = keyIterator.next();
+                if (!fieldDecoder.skip(keyId)) {
+                    String key = fieldDecoder.decodeString(keyId);
+                    String value = fieldDecoder.decodeString(valueIterator.next());
+                    entityTags.put(key, value);
+                } else {
+                    valueIterator.next();
+                }
 
             }
             return entityTags;
         }
-        
->>>>>>> ors/master
+
         return null;
     }
 
@@ -180,8 +160,8 @@ public class PbfBlobDecoder implements Runnable {
         for (Osmformat.Node node : nodes) {
             Map<String, String> tags = buildTags(node.getKeysList(), node.getValsList(), fieldDecoder);
 
-            ReaderNode osmNode = new ReaderNode(node.getId(), fieldDecoder.decodeLatitude(node
-                    .getLat()), fieldDecoder.decodeLatitude(node.getLon()));
+            ReaderNode osmNode = new ReaderNode(node.getId(), fieldDecoder.decodeLatitude(node.getLat()),
+                    fieldDecoder.decodeLatitude(node.getLon()));
             osmNode.setTags(tags);
 
             // Add the bound object to the results.
@@ -215,10 +195,10 @@ public class PbfBlobDecoder implements Runnable {
         long nodeId = 0;
         long latitude = 0;
         long longitude = 0;
-//		int userId = 0;
-//		int userSid = 0;
-//		long timestamp = 0;
-//		long changesetId = 0;
+        //		int userId = 0;
+        //		int userSid = 0;
+        //		long timestamp = 0;
+        //		long changesetId = 0;
         for (int i = 0; i < idList.size(); i++) {
             // Delta decode node fields.
             nodeId += idList.get(i);
@@ -232,7 +212,7 @@ public class PbfBlobDecoder implements Runnable {
              userSid += denseInfo.getUserSid(i);
              timestamp += denseInfo.getTimestamp(i);
              changesetId += denseInfo.getChangeset(i);
-
+            
              // Build the user, but only if one exists.
              OsmUser user;
              if (userId >= 0) {
@@ -240,7 +220,7 @@ public class PbfBlobDecoder implements Runnable {
              } else {
              user = OsmUser.NONE;
              }
-
+            
              entityData = new CommonEntityData(nodeId, denseInfo.getVersion(i),
              fieldDecoder.decodeTimestamp(timestamp), user, changesetId);
              } else {
@@ -251,12 +231,8 @@ public class PbfBlobDecoder implements Runnable {
             // Build the tags. The key and value string indexes are sequential
             // in the same PBF array. Each set of tags is delimited by an index
             // with a value of 0.
-<<<<<<< HEAD
-            Map<String, String> tags = null;
-=======
             Map<String, String> tags = entityTags; // Runge
-            
->>>>>>> ors/master
+
             while (keysValuesIterator.hasNext()) {
                 int keyIndex = keysValuesIterator.next();
                 if (keyIndex == 0) {
@@ -272,15 +248,12 @@ public class PbfBlobDecoder implements Runnable {
 
                 if (tags == null) {
                     // devide by 2 as key&value, multiple by 2 because of the better approximation
-                    tags = new HashMap<String, String>(Math.max(3, 2 * (nodes.getKeysValsList().size() / 2) / idList.size()));
+                    tags = new HashMap<String, String>(
+                            Math.max(3, 2 * (nodes.getKeysValsList().size() / 2) / idList.size()));
                 }
 
-<<<<<<< HEAD
-                tags.put(fieldDecoder.decodeString(keyIndex), fieldDecoder.decodeString(valueIndex));
-=======
                 if (!fieldDecoder.skip(keyIndex))
-                	tags.put(fieldDecoder.decodeString(keyIndex), fieldDecoder.decodeString(valueIndex));
->>>>>>> ors/master
+                    tags.put(fieldDecoder.decodeString(keyIndex), fieldDecoder.decodeString(valueIndex));
             }
 
             ReaderNode node = new ReaderNode(nodeId, ((double) latitude) / 10000000, ((double) longitude) / 10000000);
@@ -294,11 +267,7 @@ public class PbfBlobDecoder implements Runnable {
     private void processWays(List<Osmformat.Way> ways, PbfFieldDecoder fieldDecoder) {
         for (Osmformat.Way way : ways) {
             Map<String, String> tags = buildTags(way.getKeysList(), way.getValsList(), fieldDecoder);
-<<<<<<< HEAD
-            ReaderWay osmWay = new ReaderWay(way.getId());
-=======
             ReaderWay osmWay = new ReaderWay(way.getId(), way.getRefsList().size()); // Runge
->>>>>>> ors/master
             osmWay.setTags(tags);
 
             // Build up the list of way nodes for the way. The node ids are
@@ -315,9 +284,8 @@ public class PbfBlobDecoder implements Runnable {
         }
     }
 
-    private void buildRelationMembers(ReaderRelation relation,
-                                      List<Long> memberIds, List<Integer> memberRoles, List<Osmformat.Relation.MemberType> memberTypes,
-                                      PbfFieldDecoder fieldDecoder) {
+    private void buildRelationMembers(ReaderRelation relation, List<Long> memberIds, List<Integer> memberRoles,
+            List<Osmformat.Relation.MemberType> memberTypes, PbfFieldDecoder fieldDecoder) {
 
         // Ensure parallel lists are of equal size.
         if (checkData) {
@@ -351,7 +319,8 @@ public class PbfBlobDecoder implements Runnable {
                 }
             }
 
-            ReaderRelation.Member member = new ReaderRelation.Member(entityType, refId, fieldDecoder.decodeString(memberRoleIterator.next()));
+            ReaderRelation.Member member = new ReaderRelation.Member(entityType, refId,
+                    fieldDecoder.decodeString(memberRoleIterator.next()));
             relation.add(member);
         }
     }

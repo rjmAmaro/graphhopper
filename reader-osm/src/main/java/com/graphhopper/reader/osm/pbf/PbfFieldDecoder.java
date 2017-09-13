@@ -20,11 +20,8 @@ public class PbfFieldDecoder {
     private long coordLongitudeOffset;
     private int dateGranularity;
 
-<<<<<<< HEAD
-=======
     private byte[] fieldsToSkip; // Runge
 
->>>>>>> ors/master
     /**
      * Creates a new instance.
      * <p>
@@ -39,20 +36,14 @@ public class PbfFieldDecoder {
 
         Osmformat.StringTable stringTable = primitiveBlock.getStringtable();
         strings = new String[stringTable.getSCount()];
-<<<<<<< HEAD
+        fieldsToSkip = new byte[stringTable.getSCount()];
         for (int i = 0; i < strings.length; i++) {
-            strings[i] = stringTable.getS(i).toStringUtf8();
-=======
-        fieldsToSkip= new byte[stringTable.getSCount()];
-        for (int i = 0; i < strings.length; i++)
-        {
-        	String str = stringTable.getS(i).toStringUtf8();
+            String str = stringTable.getS(i).toStringUtf8();
             strings[i] = str;
             if ("".equals(str) || "created_by".equals(str) || str.startsWith("TMC") || str.startsWith("addr:"))
-            	fieldsToSkip[i] = 1;
+                fieldsToSkip[i] = 1;
             else
-            	fieldsToSkip[i] = 0;
->>>>>>> ors/master
+                fieldsToSkip[i] = 0;
         }
     }
 
@@ -89,14 +80,11 @@ public class PbfFieldDecoder {
         return new Date(dateGranularity * rawTimestamp);
     }
 
-<<<<<<< HEAD
-=======
-    public boolean skip(int rawString)  // Runge
+    public boolean skip(int rawString) // Runge
     {
-    	return fieldsToSkip[rawString] == 1; 
+        return fieldsToSkip[rawString] == 1;
     }
 
->>>>>>> ors/master
     /**
      * Decodes a raw string into a String.
      * <p>

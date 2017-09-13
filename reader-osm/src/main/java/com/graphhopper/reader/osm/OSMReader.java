@@ -150,8 +150,7 @@ public class OSMReader implements DataReader {
         writeOsm2Graph(osmFile);
         sw2.stop();
 
-        LOGGER.info("time pass1:" + (int) sw1.getSeconds() + "s, "
-                + "pass2:" + (int) sw2.getSeconds() + "s, "
+        LOGGER.info("time pass1:" + (int) sw1.getSeconds() + "s, " + "pass2:" + (int) sw2.getSeconds() + "s, "
                 + "total:" + (int) (sw1.getSeconds() + sw2.getSeconds()) + "s");
     }
 
@@ -176,8 +175,8 @@ public class OSMReader implements DataReader {
                         }
 
                         if (++tmpWayCounter % 10_000_000 == 0) {
-                            LOGGER.info(nf(tmpWayCounter) + " (preprocess), osmIdMap:" + nf(getNodeMap().getSize()) + " ("
-                                    + getNodeMap().getMemoryUsage() + "MB) " + Helper.getMemInfo());
+                            LOGGER.info(nf(tmpWayCounter) + " (preprocess), osmIdMap:" + nf(getNodeMap().getSize())
+                                    + " (" + getNodeMap().getMemoryUsage() + "MB) " + Helper.getMemInfo());
                         }
                     }
                 } else if (item.isType(ReaderElement.RELATION)) {
@@ -249,7 +248,8 @@ public class OSMReader implements DataReader {
      */
     private void writeOsm2Graph(File osmFile) {
         int tmp = (int) Math.max(getNodeMap().getSize() / 50, 100);
-        LOGGER.info("creating graph. Found nodes (pillar+tower):" + nf(getNodeMap().getSize()) + ", " + Helper.getMemInfo());
+        LOGGER.info("creating graph. Found nodes (pillar+tower):" + nf(getNodeMap().getSize()) + ", "
+                + Helper.getMemInfo());
         if (!dontCreateStorage) {
             ghStorage.create(tmp);
         }
@@ -262,38 +262,40 @@ public class OSMReader implements DataReader {
             ReaderElement item;
             while ((item = in.getNext()) != null) {
                 switch (item.getType()) {
-                    case ReaderElement.NODE:
-                        if (nodeFilter.get(item.getId()) != -1) {
-                            processNode((ReaderNode) item);
-                        }
-                        break;
+                case ReaderElement.NODE:
+                    if (nodeFilter.get(item.getId()) != -1) {
+                        processNode((ReaderNode) item);
+                    }
+                    break;
 
-                    case ReaderElement.WAY:
-                        if (wayStart < 0) {
-                            LOGGER.info(nf(counter) + ", now parsing ways");
-                            wayStart = counter;
-                        }
-                        processWay((ReaderWay) item);
-                        break;
-                    case ReaderElement.RELATION:
-                        if (relationStart < 0) {
-                            LOGGER.info(nf(counter) + ", now parsing relations");
-                            relationStart = counter;
-                        }
-                        processRelation((ReaderRelation) item);
-                        break;
-                    case ReaderElement.FILEHEADER:
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown type " + item.getType());
+                case ReaderElement.WAY:
+                    if (wayStart < 0) {
+                        LOGGER.info(nf(counter) + ", now parsing ways");
+                        wayStart = counter;
+                    }
+                    processWay((ReaderWay) item);
+                    break;
+                case ReaderElement.RELATION:
+                    if (relationStart < 0) {
+                        LOGGER.info(nf(counter) + ", now parsing relations");
+                        relationStart = counter;
+                    }
+                    processRelation((ReaderRelation) item);
+                    break;
+                case ReaderElement.FILEHEADER:
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown type " + item.getType());
                 }
                 if (++counter % 200_000_000 == 0) {
-                    LOGGER.info(nf(counter) + ", locs:" + nf(locations) + " (" + skippedLocations + ") " + Helper.getMemInfo());
+                    LOGGER.info(nf(counter) + ", locs:" + nf(locations) + " (" + skippedLocations + ") "
+                            + Helper.getMemInfo());
                 }
             }
 
             if (in.getUnprocessedElements() > 0)
-                throw new IllegalStateException("Still unprocessed elements in reader queue " + in.getUnprocessedElements());
+                throw new IllegalStateException(
+                        "Still unprocessed elements in reader queue " + in.getUnprocessedElements());
 
             // logger.info("storage nodes:" + storage.nodes() + " vs. graph nodes:" + storage.getGraph().nodes());
         } catch (Exception ex) {
@@ -302,7 +304,8 @@ public class OSMReader implements DataReader {
 
         finishedReading();
         if (graph.getNodes() == 0)
-            throw new RuntimeException("Graph after reading OSM must not be empty. Read " + counter + " items and " + locations + " locations");
+            throw new RuntimeException("Graph after reading OSM must not be empty. Read " + counter + " items and "
+                    + locations + " locations");
     }
 
     protected OSMInput openOsmInputFile(File osmFile) throws XMLStreamException, IOException {
@@ -336,7 +339,8 @@ public class OSMReader implements DataReader {
             int last = getNodeMap().get(osmNodeIds.get(osmNodeIds.size() - 1));
             double firstLat = getTmpLatitude(first), firstLon = getTmpLongitude(first);
             double lastLat = getTmpLatitude(last), lastLon = getTmpLongitude(last);
-            if (!Double.isNaN(firstLat) && !Double.isNaN(firstLon) && !Double.isNaN(lastLat) && !Double.isNaN(lastLon)) {
+            if (!Double.isNaN(firstLat) && !Double.isNaN(firstLon) && !Double.isNaN(lastLat)
+                    && !Double.isNaN(lastLon)) {
                 double estimatedDist = distCalc.calcDist(firstLat, firstLon, lastLat, lastLon);
                 // Add artificial tag for the estimated distance and center
                 way.setTag("estimated_distance", estimatedDist);
@@ -408,55 +412,42 @@ public class OSMReader implements DataReader {
                 createdEdges.addAll(addOSMWay(partNodeIds, wayFlags, wayOsmId));
             }
         } else {
-<<<<<<< HEAD
-            // no barriers - simply add the whole way
-            createdEdges.addAll(addOSMWay(way.getNodes(), wayFlags, wayOsmId));
-        }
-
-        for (EdgeIteratorState edge : createdEdges) {
-            encodingManager.applyWayTags(way, edge);
-        }
-    }
-=======
-        	if (!onCreateEdges(way, osmNodeIds, wayFlags, createdEdges))
-        	{
-        		// no barriers - simply add the whole way
-        		createdEdges.addAll(addOSMWay(way.getNodes(), wayFlags, wayOsmId));
-        	}
+            if (!onCreateEdges(way, osmNodeIds, wayFlags, createdEdges)) {
+                // no barriers - simply add the whole way
+                createdEdges.addAll(addOSMWay(way.getNodes(), wayFlags, wayOsmId));
+            }
         }
 
         onProcessWay(way);
-        
+
         for (EdgeIteratorState edge : createdEdges) {
             encodingManager.applyWayTags(way, edge);
             onProcessEdge(way, edge);
         }
     }
-    
+
     // runge
-    protected boolean onCreateEdges(ReaderWay way, LongArrayList osmNodeIds, long wayFlags, List<EdgeIteratorState> createdEdges)
-    {
-    	return false;
-    }
-    
-    protected void onProcessWay(ReaderWay way) // runge
-    {
-    	
-    }
-    
-    protected void processEdge(ReaderWay way, EdgeIteratorState edge) // runge
-    {
-    	encodingManager.applyWayTags(way, edge);
-    	
-    	onProcessEdge(way, edge);
-    }
-    
-    protected void onProcessEdge(ReaderWay way, EdgeIteratorState edge) // runge
-    {
-    	
+    protected boolean onCreateEdges(ReaderWay way, LongArrayList osmNodeIds, long wayFlags,
+            List<EdgeIteratorState> createdEdges) {
+        return false;
     }
 
->>>>>>> ors/master
+    protected void onProcessWay(ReaderWay way) // runge
+    {
+
+    }
+
+    protected void processEdge(ReaderWay way, EdgeIteratorState edge) // runge
+    {
+        encodingManager.applyWayTags(way, edge);
+
+        onProcessEdge(way, edge);
+    }
+
+    protected void onProcessEdge(ReaderWay way, EdgeIteratorState edge) // runge
+    {
+
+    }
 
     public void processRelation(ReaderRelation relation) throws XMLStreamException {
         if (relation.hasTag("type", "restriction")) {
@@ -644,7 +635,8 @@ public class OSMReader implements DataReader {
     /**
      * This method creates from an OSM way (via the osm ids) one or more edges in the graph.
      */
-    Collection<EdgeIteratorState> addOSMWay(final LongIndexedContainer osmNodeIds, final long flags, final long wayOsmId) {
+    Collection<EdgeIteratorState> addOSMWay(final LongIndexedContainer osmNodeIds, final long flags,
+            final long wayOsmId) {
         PointList pointList = new PointList(osmNodeIds.size(), nodeAccess.is3D());
         List<EdgeIteratorState> newEdges = new ArrayList<EdgeIteratorState>(5);
         int firstNode = -1;
@@ -718,9 +710,11 @@ public class OSMReader implements DataReader {
     EdgeIteratorState addEdge(int fromIndex, int toIndex, PointList pointList, long flags, long wayOsmId) {
         // sanity checks
         if (fromIndex < 0 || toIndex < 0)
-            throw new AssertionError("to or from index is invalid for this edge " + fromIndex + "->" + toIndex + ", points:" + pointList);
+            throw new AssertionError("to or from index is invalid for this edge " + fromIndex + "->" + toIndex
+                    + ", points:" + pointList);
         if (pointList.getDimension() != nodeAccess.getDimension())
-            throw new AssertionError("Dimension does not match for pointList vs. nodeAccess " + pointList.getDimension() + " <-> " + nodeAccess.getDimension());
+            throw new AssertionError("Dimension does not match for pointList vs. nodeAccess " + pointList.getDimension()
+                    + " <-> " + nodeAccess.getDimension());
 
         double towerNodeDistance = 0;
         double prevLat = pointList.getLatitude(0);
@@ -759,14 +753,16 @@ public class OSMReader implements DataReader {
 
         double maxDistance = (Integer.MAX_VALUE - 1) / 1000d;
         if (Double.isNaN(towerNodeDistance)) {
-            LOGGER.warn("Bug in OSM or GraphHopper. Illegal tower node distance " + towerNodeDistance + " reset to 1m, osm way " + wayOsmId);
+            LOGGER.warn("Bug in OSM or GraphHopper. Illegal tower node distance " + towerNodeDistance
+                    + " reset to 1m, osm way " + wayOsmId);
             towerNodeDistance = 1;
         }
 
         if (Double.isInfinite(towerNodeDistance) || towerNodeDistance > maxDistance) {
             // Too large is very rare and often the wrong tagging. See #435 
             // so we can avoid the complexity of splitting the way for now (new towernodes would be required, splitting up geometry etc)
-            LOGGER.warn("Bug in OSM or GraphHopper. Too big tower node distance " + towerNodeDistance + " reset to large value, osm way " + wayOsmId);
+            LOGGER.warn("Bug in OSM or GraphHopper. Too big tower node distance " + towerNodeDistance
+                    + " reset to large value, osm way " + wayOsmId);
             towerNodeDistance = maxDistance;
         }
 
@@ -800,8 +796,8 @@ public class OSMReader implements DataReader {
         double lon = pillarInfo.getLongitude(tmpNode);
         double ele = pillarInfo.getElevation(tmpNode);
         if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE)
-            throw new RuntimeException("Conversion pillarNode to towerNode already happended!? "
-                    + "osmId:" + osmId + " pillarIndex:" + tmpNode);
+            throw new RuntimeException("Conversion pillarNode to towerNode already happended!? " + "osmId:" + osmId
+                    + " pillarIndex:" + tmpNode);
 
         if (convertToTowerNode) {
             // convert pillarNode type to towerNode, make pillar values invalid
@@ -897,22 +893,14 @@ public class OSMReader implements DataReader {
     /**
      * Filter method, override in subclass
      */
-<<<<<<< HEAD
-    boolean isInBounds(ReaderNode node) {
-=======
     protected boolean isInBounds(ReaderNode node) {
->>>>>>> ors/master
         return true;
     }
 
     /**
      * Maps OSM IDs (long) to internal node IDs (int)
      */
-<<<<<<< HEAD
-    protected LongIntMap getNodeMap() {
-=======
     public LongIntMap getNodeMap() { // runge changed to public
->>>>>>> ors/master
         return osmNodeIdToInternalNodeMap;
     }
 
@@ -940,7 +928,8 @@ public class OSMReader implements DataReader {
     @Override
     public OSMReader setElevationProvider(ElevationProvider eleProvider) {
         if (eleProvider == null)
-            throw new IllegalStateException("Use the NOOP elevation provider instead of null or don't call setElevationProvider");
+            throw new IllegalStateException(
+                    "Use the NOOP elevation provider instead of null or don't call setElevationProvider");
 
         if (!nodeAccess.is3D() && ElevationProvider.NOOP != eleProvider)
             throw new IllegalStateException("Make sure you graph accepts 3D data");
@@ -956,11 +945,10 @@ public class OSMReader implements DataReader {
     }
 
     private void printInfo(String str) {
-        LOGGER.info("finished " + str + " processing." + " nodes: " + graph.getNodes()
-                + ", osmIdMap.size:" + getNodeMap().getSize() + ", osmIdMap:" + getNodeMap().getMemoryUsage() + "MB"
-                + ", nodeFlagsMap.size:" + getNodeFlagsMap().size() + ", relFlagsMap.size:" + getRelFlagsMap().size()
-                + ", zeroCounter:" + zeroCounter
-                + " " + Helper.getMemInfo());
+        LOGGER.info("finished " + str + " processing." + " nodes: " + graph.getNodes() + ", osmIdMap.size:"
+                + getNodeMap().getSize() + ", osmIdMap:" + getNodeMap().getMemoryUsage() + "MB" + ", nodeFlagsMap.size:"
+                + getNodeFlagsMap().size() + ", relFlagsMap.size:" + getRelFlagsMap().size() + ", zeroCounter:"
+                + zeroCounter + " " + Helper.getMemInfo());
     }
 
     @Override

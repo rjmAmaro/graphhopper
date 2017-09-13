@@ -43,14 +43,11 @@ public class BaseServletTester {
     private static final MediaType MT_JSON = MediaType.parse("application/json; charset=utf-8");
     private static final MediaType MT_XML = MediaType.parse("application/gpx+xml; charset=utf-8");
     protected static final Logger LOGGER = LoggerFactory.getLogger(BaseServletTester.class);
-    private final OkHttpClient client = new OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build();
+    private final OkHttpClient client = new OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS).build();
     protected static int port;
     private static GHServer server;
-<<<<<<< HEAD
-    protected Injector injector;
-=======
     private Injector injector;
->>>>>>> ors/master
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public static void shutdownJetty(boolean force) {
@@ -74,22 +71,15 @@ public class BaseServletTester {
      */
     public void setUpJetty(CmdArgs args) {
         if (injector != null)
-<<<<<<< HEAD
-            throw new UnsupportedOperationException("do not call guice before");
-=======
             throw new UnsupportedOperationException("Do not call guice before");
->>>>>>> ors/master
 
         bootJetty(args, 3);
     }
 
-<<<<<<< HEAD
-=======
     protected <T> T getInstance(Class<T> clazz) {
         return server.getInjector().getInstance(clazz);
     }
 
->>>>>>> ors/master
     private void bootJetty(CmdArgs args, int retryCount) {
         if (server != null)
             return;
@@ -107,10 +97,6 @@ public class BaseServletTester {
             try {
                 LOGGER.info("Trying to start jetty at port " + port);
                 server.start(injector);
-<<<<<<< HEAD
-//                server.join();
-=======
->>>>>>> ors/master
                 started = true;
                 break;
             } catch (Exception ex) {
@@ -185,10 +171,10 @@ public class BaseServletTester {
             type = MT_JSON;
         }
 
-        Response rsp = client.newCall(new Request.Builder().url(url).
-                post(RequestBody.create(type, xmlOrJson)).build()).execute();
-        assertEquals(url + ", http status was:" + rsp.code(),
-                HttpStatus.getMessage(expectedStatusCode), HttpStatus.getMessage(rsp.code()));
+        Response rsp = client.newCall(new Request.Builder().url(url).post(RequestBody.create(type, xmlOrJson)).build())
+                .execute();
+        assertEquals(url + ", http status was:" + rsp.code(), HttpStatus.getMessage(expectedStatusCode),
+                HttpStatus.getMessage(rsp.code()));
         return rsp.body().string();
     }
 }

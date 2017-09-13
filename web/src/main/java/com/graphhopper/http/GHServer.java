@@ -48,10 +48,7 @@ public class GHServer {
     private final CmdArgs args;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private Server server;
-<<<<<<< HEAD
-=======
     private Injector injector;
->>>>>>> ors/master
 
     public GHServer(CmdArgs args) {
         this.args = args;
@@ -67,18 +64,13 @@ public class GHServer {
     }
 
     public void start(Injector injector) throws Exception {
-<<<<<<< HEAD
-=======
         if (this.injector != null)
             throw new IllegalArgumentException("Server already started");
 
         this.injector = injector;
->>>>>>> ors/master
         ResourceHandler resHandler = new ResourceHandler();
         resHandler.setDirectoriesListed(false);
-        resHandler.setWelcomeFiles(new String[]{
-                "index.html"
-        });
+        resHandler.setWelcomeFiles(new String[] { "index.html" });
         resHandler.setRedirectWelcome(false);
 
         ContextHandler contextHandler = new ContextHandler();
@@ -88,7 +80,8 @@ public class GHServer {
 
         server = new Server();
         // getSessionHandler and getSecurityHandler should always return null
-        ServletContextHandler servHandler = new ServletContextHandler(ServletContextHandler.NO_SECURITY | ServletContextHandler.NO_SESSIONS);
+        ServletContextHandler servHandler = new ServletContextHandler(
+                ServletContextHandler.NO_SECURITY | ServletContextHandler.NO_SESSIONS);
         servHandler.setErrorHandler(new GHErrorHandler());
         servHandler.setContextPath("/");
 
@@ -106,7 +99,8 @@ public class GHServer {
 
         int requestHeaderSize = args.getInt("jetty.request_header_size", -1);
         if (requestHeaderSize > 0)
-            connector0.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setRequestHeaderSize(requestHeaderSize);
+            connector0.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration()
+                    .setRequestHeaderSize(requestHeaderSize);
 
         if (!host.isEmpty())
             connector0.setHost(host);
@@ -114,9 +108,7 @@ public class GHServer {
         server.addConnector(connector0);
 
         HandlerList handlers = new HandlerList();
-        handlers.setHandlers(new Handler[]{
-                contextHandler, servHandler
-        });
+        handlers.setHandlers(new Handler[] { contextHandler, servHandler });
 
         GzipHandler gzipHandler = new GzipHandler();
         gzipHandler.setIncludedMethods("GET", "POST");
@@ -176,11 +168,8 @@ public class GHServer {
             logger.error("Cannot stop jetty", ex);
         }
     }
-<<<<<<< HEAD
-=======
 
     Injector getInjector() {
         return injector;
     }
->>>>>>> ors/master
 }
