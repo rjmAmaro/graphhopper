@@ -116,6 +116,12 @@ public class PbfBlobDecoder implements Runnable {
          */
     }
 
+<<<<<<< HEAD
+=======
+    // Runge: add variable to reuse it multiple times
+    private Map<String, String> entityTags = null;
+
+>>>>>>> ors/master
     private Map<String, String> buildTags(List<Integer> keys, List<Integer> values, PbfFieldDecoder fieldDecoder) {
 
         // Ensure parallel lists are of equal size.
@@ -126,6 +132,7 @@ public class PbfBlobDecoder implements Runnable {
             }
         }
 
+<<<<<<< HEAD
         Iterator<Integer> keyIterator = keys.iterator();
         Iterator<Integer> valueIterator = values.iterator();
         if (keyIterator.hasNext()) {
@@ -137,6 +144,35 @@ public class PbfBlobDecoder implements Runnable {
             }
             return tags;
         }
+=======
+    	if (entityTags == null)
+    		entityTags = new HashMap<String, String>(keys.size());
+    	else
+    		entityTags.clear();
+
+        Iterator<Integer> keyIterator = keys.iterator();
+        Iterator<Integer> valueIterator = values.iterator();
+        if (keyIterator.hasNext()) {
+        	int keyId = 1;
+            
+            while (keyIterator.hasNext()) {
+            	keyId = keyIterator.next();
+            	if (!fieldDecoder.skip(keyId))
+            	{
+            		String key = fieldDecoder.decodeString(keyId);
+            		String value = fieldDecoder.decodeString(valueIterator.next());
+            		entityTags.put(key, value);
+            	}
+            	else
+            	{
+            		valueIterator.next();
+            	}
+
+            }
+            return entityTags;
+        }
+        
+>>>>>>> ors/master
         return null;
     }
 
@@ -215,7 +251,12 @@ public class PbfBlobDecoder implements Runnable {
             // Build the tags. The key and value string indexes are sequential
             // in the same PBF array. Each set of tags is delimited by an index
             // with a value of 0.
+<<<<<<< HEAD
             Map<String, String> tags = null;
+=======
+            Map<String, String> tags = entityTags; // Runge
+            
+>>>>>>> ors/master
             while (keysValuesIterator.hasNext()) {
                 int keyIndex = keysValuesIterator.next();
                 if (keyIndex == 0) {
@@ -234,7 +275,12 @@ public class PbfBlobDecoder implements Runnable {
                     tags = new HashMap<String, String>(Math.max(3, 2 * (nodes.getKeysValsList().size() / 2) / idList.size()));
                 }
 
+<<<<<<< HEAD
                 tags.put(fieldDecoder.decodeString(keyIndex), fieldDecoder.decodeString(valueIndex));
+=======
+                if (!fieldDecoder.skip(keyIndex))
+                	tags.put(fieldDecoder.decodeString(keyIndex), fieldDecoder.decodeString(valueIndex));
+>>>>>>> ors/master
             }
 
             ReaderNode node = new ReaderNode(nodeId, ((double) latitude) / 10000000, ((double) longitude) / 10000000);
@@ -248,7 +294,11 @@ public class PbfBlobDecoder implements Runnable {
     private void processWays(List<Osmformat.Way> ways, PbfFieldDecoder fieldDecoder) {
         for (Osmformat.Way way : ways) {
             Map<String, String> tags = buildTags(way.getKeysList(), way.getValsList(), fieldDecoder);
+<<<<<<< HEAD
             ReaderWay osmWay = new ReaderWay(way.getId());
+=======
+            ReaderWay osmWay = new ReaderWay(way.getId(), way.getRefsList().size()); // Runge
+>>>>>>> ors/master
             osmWay.setTags(tags);
 
             // Build up the list of way nodes for the way. The node ids are

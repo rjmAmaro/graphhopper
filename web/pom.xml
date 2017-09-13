@@ -6,14 +6,22 @@
     <groupId>com.graphhopper</groupId>
     <artifactId>graphhopper-web</artifactId>
     <packaging>jar</packaging>
+<<<<<<< HEAD
     <version>0.9.0</version>
+=======
+    <version>0.10-SNAPSHOT</version>
+>>>>>>> ors/master
     <name>GraphHopper Web</name>
     <description>Use the GraphHopper routing engine as a web-service</description>
 
     <parent>
         <groupId>com.graphhopper</groupId>
         <artifactId>graphhopper-parent</artifactId>
+<<<<<<< HEAD
         <version>0.9.0</version>
+=======
+        <version>0.10-SNAPSHOT</version>
+>>>>>>> ors/master
     </parent>
     <properties>
         <jetty.version>9.4.2.v20170220</jetty.version>

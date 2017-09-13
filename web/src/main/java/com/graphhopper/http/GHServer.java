@@ -48,6 +48,10 @@ public class GHServer {
     private final CmdArgs args;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private Server server;
+<<<<<<< HEAD
+=======
+    private Injector injector;
+>>>>>>> ors/master
 
     public GHServer(CmdArgs args) {
         this.args = args;
@@ -63,6 +67,13 @@ public class GHServer {
     }
 
     public void start(Injector injector) throws Exception {
+<<<<<<< HEAD
+=======
+        if (this.injector != null)
+            throw new IllegalArgumentException("Server already started");
+
+        this.injector = injector;
+>>>>>>> ors/master
         ResourceHandler resHandler = new ResourceHandler();
         resHandler.setDirectoriesListed(false);
         resHandler.setWelcomeFiles(new String[]{
@@ -165,4 +176,11 @@ public class GHServer {
             logger.error("Cannot stop jetty", ex);
         }
     }
+<<<<<<< HEAD
+=======
+
+    Injector getInjector() {
+        return injector;
+    }
+>>>>>>> ors/master
 }

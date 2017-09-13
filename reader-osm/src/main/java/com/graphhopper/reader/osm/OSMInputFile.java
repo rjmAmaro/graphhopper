@@ -193,8 +193,16 @@ public class OSMInputFile implements Sink, OSMInput {
                         case 'n':
                             // note vs. node
                             if ("node".equals(name)) {
+<<<<<<< HEAD
                                 id = Long.parseLong(idStr);
                                 return OSMXMLHelper.createNode(id, parser);
+=======
+                            	if (parser.getAttributeValue(null, "lat") != null) // Runge
+                            	{
+                            		id = Long.parseLong(idStr);
+                            		return OSMXMLHelper.createNode(id, parser);
+                            	}
+>>>>>>> ors/master
                             }
                             break;
 

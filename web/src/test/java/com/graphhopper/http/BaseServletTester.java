@@ -46,7 +46,11 @@ public class BaseServletTester {
     private final OkHttpClient client = new OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build();
     protected static int port;
     private static GHServer server;
+<<<<<<< HEAD
     protected Injector injector;
+=======
+    private Injector injector;
+>>>>>>> ors/master
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public static void shutdownJetty(boolean force) {
@@ -70,11 +74,22 @@ public class BaseServletTester {
      */
     public void setUpJetty(CmdArgs args) {
         if (injector != null)
+<<<<<<< HEAD
             throw new UnsupportedOperationException("do not call guice before");
+=======
+            throw new UnsupportedOperationException("Do not call guice before");
+>>>>>>> ors/master
 
         bootJetty(args, 3);
     }
 
+<<<<<<< HEAD
+=======
+    protected <T> T getInstance(Class<T> clazz) {
+        return server.getInjector().getInstance(clazz);
+    }
+
+>>>>>>> ors/master
     private void bootJetty(CmdArgs args, int retryCount) {
         if (server != null)
             return;
@@ -92,7 +107,10 @@ public class BaseServletTester {
             try {
                 LOGGER.info("Trying to start jetty at port " + port);
                 server.start(injector);
+<<<<<<< HEAD
 //                server.join();
+=======
+>>>>>>> ors/master
                 started = true;
                 break;
             } catch (Exception ex) {

@@ -408,6 +408,7 @@ public class OSMReader implements DataReader {
                 createdEdges.addAll(addOSMWay(partNodeIds, wayFlags, wayOsmId));
             }
         } else {
+<<<<<<< HEAD
             // no barriers - simply add the whole way
             createdEdges.addAll(addOSMWay(way.getNodes(), wayFlags, wayOsmId));
         }
@@ -416,6 +417,46 @@ public class OSMReader implements DataReader {
             encodingManager.applyWayTags(way, edge);
         }
     }
+=======
+        	if (!onCreateEdges(way, osmNodeIds, wayFlags, createdEdges))
+        	{
+        		// no barriers - simply add the whole way
+        		createdEdges.addAll(addOSMWay(way.getNodes(), wayFlags, wayOsmId));
+        	}
+        }
+
+        onProcessWay(way);
+        
+        for (EdgeIteratorState edge : createdEdges) {
+            encodingManager.applyWayTags(way, edge);
+            onProcessEdge(way, edge);
+        }
+    }
+    
+    // runge
+    protected boolean onCreateEdges(ReaderWay way, LongArrayList osmNodeIds, long wayFlags, List<EdgeIteratorState> createdEdges)
+    {
+    	return false;
+    }
+    
+    protected void onProcessWay(ReaderWay way) // runge
+    {
+    	
+    }
+    
+    protected void processEdge(ReaderWay way, EdgeIteratorState edge) // runge
+    {
+    	encodingManager.applyWayTags(way, edge);
+    	
+    	onProcessEdge(way, edge);
+    }
+    
+    protected void onProcessEdge(ReaderWay way, EdgeIteratorState edge) // runge
+    {
+    	
+    }
+
+>>>>>>> ors/master
 
     public void processRelation(ReaderRelation relation) throws XMLStreamException {
         if (relation.hasTag("type", "restriction")) {
@@ -856,14 +897,22 @@ public class OSMReader implements DataReader {
     /**
      * Filter method, override in subclass
      */
+<<<<<<< HEAD
     boolean isInBounds(ReaderNode node) {
+=======
+    protected boolean isInBounds(ReaderNode node) {
+>>>>>>> ors/master
         return true;
     }
 
     /**
      * Maps OSM IDs (long) to internal node IDs (int)
      */
+<<<<<<< HEAD
     protected LongIntMap getNodeMap() {
+=======
+    public LongIntMap getNodeMap() { // runge changed to public
+>>>>>>> ors/master
         return osmNodeIdToInternalNodeMap;
     }
 

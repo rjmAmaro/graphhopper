@@ -97,7 +97,11 @@ public class GraphHopperIT {
         assertEquals(43.7495432, arsp.getWaypoints().getLat(1), 1e-7);
 
         InstructionList il = arsp.getInstructions();
+<<<<<<< HEAD
         assertEquals(21, il.size());
+=======
+        assertEquals(22, il.size());
+>>>>>>> ors/master
 
         List<Map<String, Object>> resultJson = il.createJson();
         // TODO roundabout fine tuning -> enter + leave roundabout (+ two rounabouts -> is it necessary if we do not leave the street?)
@@ -329,7 +333,11 @@ public class GraphHopperIT {
         assertEquals(190, arsp.getPoints().getSize());
 
         InstructionList il = arsp.getInstructions();
+<<<<<<< HEAD
         assertEquals(38, il.size());
+=======
+        assertEquals(40, il.size());
+>>>>>>> ors/master
         List<Map<String, Object>> resultJson = il.createJson();
         assertEquals("Continue onto Avenue des Guelfes", resultJson.get(0).get("text"));
         assertEquals("Continue onto Avenue des Papalins", resultJson.get(1).get("text"));
@@ -337,7 +345,11 @@ public class GraphHopperIT {
         assertEquals("Turn left", resultJson.get(5).get("text"));
         assertEquals("Turn right onto Avenue Albert II", resultJson.get(6).get("text"));
 
+<<<<<<< HEAD
         assertEquals("Stopover 1", resultJson.get(20).get("text"));
+=======
+     /*   assertEquals("Stopover 1", resultJson.get(20).get("text"));
+>>>>>>> ors/master
 
         assertEquals("Continue onto Avenue Albert II", resultJson.get(31).get("text"));
         assertEquals("Turn left", resultJson.get(32).get("text"));
@@ -386,7 +398,11 @@ public class GraphHopperIT {
         assertEquals(2, arsp.getPoints().getSize());
         assertEquals(2, arsp.getInstructions().size());
         assertEquals(Instruction.REACHED_VIA, arsp.getInstructions().createJson().get(0).get("sign"));
+<<<<<<< HEAD
         assertEquals(Instruction.FINISH, arsp.getInstructions().createJson().get(1).get("sign"));
+=======
+        assertEquals(Instruction.FINISH, arsp.getInstructions().createJson().get(1).get("sign"));*/
+>>>>>>> ors/master
     }
 
     @Test
@@ -629,7 +645,11 @@ public class GraphHopperIT {
         assertEquals(114, arsp.getPoints().getSize());
 
         InstructionList il = arsp.getInstructions();
+<<<<<<< HEAD
         assertEquals(24, il.size());
+=======
+        assertEquals(25, il.size());
+>>>>>>> ors/master
         List<Map<String, Object>> resultJson = il.createJson();
 
         assertEquals("Continue onto Obere Landstraße", resultJson.get(0).get("text"));
@@ -641,6 +661,7 @@ public class GraphHopperIT {
         assertEquals("Turn right onto Margarethenstraße", resultJson.get(3).get("text"));
         assertEquals("Turn slight left onto Hoher Markt", resultJson.get(5).get("text"));
         assertEquals("Turn right onto Wegscheid", resultJson.get(7).get("text"));
+<<<<<<< HEAD
         assertEquals("Turn right onto Ringstraße, L73", resultJson.get(9).get("text"));
         assertEquals("Turn slight left onto Eyblparkstraße", resultJson.get(10).get("text"));
         assertEquals("Turn slight left onto Austraße", resultJson.get(11).get("text"));
@@ -648,6 +669,15 @@ public class GraphHopperIT {
         //..
         assertEquals("Turn right onto Treppelweg", resultJson.get(19).get("text"));
         assertEquals("cycleway", resultJson.get(19).get("annotation_text"));
+=======
+       /* assertEquals("Turn right onto Ringstraße, L73", resultJson.get(9).get("text"));
+        assertEquals("Turn slight left onto Eyblparkstraße", resultJson.get(10).get("text"));
+        assertEquals("Turn slight left onto Austraße", resultJson.get(11).get("text"));
+        assertEquals("Turn slight left onto Rechte Kremszeile", resultJson.get(12).get("text"));*/
+        //..
+       // assertEquals("Turn right onto Treppelweg", resultJson.get(19).get("text"));
+       // assertEquals("cycleway", resultJson.get(19).get("annotation_text"));
+>>>>>>> ors/master
     }
 
     @Test
@@ -830,7 +860,11 @@ public class GraphHopperIT {
         assertTrue("Too many visited nodes for ch mode " + chSum, chSum < 60);
         PathWrapper bestPath = rsp.getBest();
         assertEquals(3587, bestPath.getDistance(), 1);
+<<<<<<< HEAD
         assertEquals(90, bestPath.getPoints().getSize());
+=======
+        assertEquals(91, bestPath.getPoints().getSize());
+>>>>>>> ors/master
 
         // request flex mode
         req.setAlgorithm(Parameters.Algorithms.ASTAR_BI);
@@ -842,7 +876,11 @@ public class GraphHopperIT {
 
         bestPath = rsp.getBest();
         assertEquals(3587, bestPath.getDistance(), 1);
+<<<<<<< HEAD
         assertEquals(90, bestPath.getPoints().getSize());
+=======
+      //  assertEquals(91, bestPath.getPoints().getSize());
+>>>>>>> ors/master
 
         // request hybrid mode
         req.getHints().put(Landmark.DISABLE, false);
@@ -856,6 +894,7 @@ public class GraphHopperIT {
 
         bestPath = rsp.getBest();
         assertEquals(3587, bestPath.getDistance(), 1);
+<<<<<<< HEAD
         assertEquals(90, bestPath.getPoints().getSize());
 
         // speed² mode is currently less optimal than CH so just check different nodes and correctness
@@ -870,6 +909,11 @@ public class GraphHopperIT {
         bestPath = rsp.getBest();
         assertEquals(3587, bestPath.getDistance(), 1);
         assertEquals(90, bestPath.getPoints().getSize());
+=======
+        assertEquals(91, bestPath.getPoints().getSize());
+
+        // combining hybrid & speed mode is currently not possible and should be avoided: #1082
+>>>>>>> ors/master
     }
 
     @Test

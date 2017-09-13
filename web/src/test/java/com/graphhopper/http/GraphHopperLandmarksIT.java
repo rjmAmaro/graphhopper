@@ -18,6 +18,10 @@
 package com.graphhopper.http;
 
 import com.fasterxml.jackson.databind.JsonNode;
+<<<<<<< HEAD
+=======
+import com.graphhopper.GraphHopper;
+>>>>>>> ors/master
 import com.graphhopper.util.CmdArgs;
 import com.graphhopper.util.Helper;
 import org.junit.AfterClass;
@@ -26,7 +30,12 @@ import org.junit.Test;
 
 import java.io.File;
 
+<<<<<<< HEAD
 import static org.junit.Assert.*;
+=======
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+>>>>>>> ors/master
 
 /**
  * Tests the creation of Landmarks and parsing the map.geo.json file
@@ -46,12 +55,20 @@ public class GraphHopperLandmarksIT extends BaseServletTester {
     public void setUp() {
         CmdArgs args = new CmdArgs().
                 put("config", "../config-example.properties").
+<<<<<<< HEAD
                 put("prepare.ch.weightings", "no").
+=======
+                put("prepare.ch.weightings", "fastest").
+>>>>>>> ors/master
                 put("prepare.lm.weightings", "fastest").
                 put("datareader.file", "../core/files/belarus-east.osm.gz").
                 put("prepare.min_network_size", 0).
                 put("prepare.min_one_way_network_size", 0).
+<<<<<<< HEAD
                 put("routing.lm.disabling_allowed", true).
+=======
+                put("routing.ch.disabling_allowed", true).
+>>>>>>> ors/master
                 put("graph.location", DIR);
 
         // force landmark creation even for tiny networks:
@@ -70,6 +87,7 @@ public class GraphHopperLandmarksIT extends BaseServletTester {
 
     @Test
     public void testLandmarkDisconnect() throws Exception {
+<<<<<<< HEAD
 
 
         // disconnected for landmarks
@@ -84,5 +102,21 @@ public class GraphHopperLandmarksIT extends BaseServletTester {
         assertEquals("distance wasn't correct:" + distance, 5790, distance, 100);
 
         shutdownJetty(true);
+=======
+        // if one algorithm is disabled then the following chain is executed: CH -> LM -> flexible
+        // disconnected for landmarks
+        JsonNode json = query("point=55.99022,29.129734&point=56.007787,29.208355&ch.disable=true", 400);
+        JsonNode errorJson = json.get("message");
+        assertTrue(errorJson.toString(), errorJson.toString().contains("Different subnetworks"));
+
+        // without landmarks it should work
+        GraphHopper hopper = getInstance(GraphHopper.class);
+        hopper.getLMFactoryDecorator().setDisablingAllowed(true);
+        json = query("point=55.99022,29.129734&point=56.007787,29.208355&ch.disable=true&lm.disable=true", 200);
+        JsonNode path = json.get("paths").get(0);
+        double distance = path.get("distance").asDouble();
+        assertEquals("distance wasn't correct:" + distance, 5790, distance, 100);
+        hopper.getLMFactoryDecorator().setDisablingAllowed(false);
+>>>>>>> ors/master
     }
 }
