@@ -426,25 +426,28 @@ public class OSMReader implements DataReader {
         }
     }
 
-    // runge
+    // Modification by Maxim Rylov: Added a new method.
     protected boolean onCreateEdges(ReaderWay way, LongArrayList osmNodeIds, long wayFlags,
             List<EdgeIteratorState> createdEdges) {
         return false;
     }
 
-    protected void onProcessWay(ReaderWay way) // runge
+    // Modification by Maxim Rylov: Added a new method.
+    protected void onProcessWay(ReaderWay way) 
     {
 
     }
 
-    protected void processEdge(ReaderWay way, EdgeIteratorState edge) // runge
+    // Modification by Maxim Rylov: Added a new method.
+    protected void processEdge(ReaderWay way, EdgeIteratorState edge) 
     {
         encodingManager.applyWayTags(way, edge);
 
         onProcessEdge(way, edge);
     }
 
-    protected void onProcessEdge(ReaderWay way, EdgeIteratorState edge) // runge
+    // Modification by Maxim Rylov: Added a new method.
+    protected void onProcessEdge(ReaderWay way, EdgeIteratorState edge)
     {
 
     }
@@ -900,7 +903,8 @@ public class OSMReader implements DataReader {
     /**
      * Maps OSM IDs (long) to internal node IDs (int)
      */
-    public LongIntMap getNodeMap() { // runge changed to public
+    // Modification by Maxim Rylov: Method visibility changed to public
+    public LongIntMap getNodeMap() { 
         return osmNodeIdToInternalNodeMap;
     }
 

@@ -20,7 +20,8 @@ public class PbfFieldDecoder {
     private long coordLongitudeOffset;
     private int dateGranularity;
 
-    private byte[] fieldsToSkip; // Runge
+    // Modification by Maxim Rylov: Added a new class variable.
+    private byte[] fieldsToSkip; 
 
     /**
      * Creates a new instance.
@@ -80,7 +81,8 @@ public class PbfFieldDecoder {
         return new Date(dateGranularity * rawTimestamp);
     }
 
-    public boolean skip(int rawString) // Runge
+    // Modification by Maxim Rylov: Added a new method.
+    public boolean skip(int rawString) 
     {
         return fieldsToSkip[rawString] == 1;
     }

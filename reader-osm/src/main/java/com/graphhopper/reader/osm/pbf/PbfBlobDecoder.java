@@ -116,7 +116,7 @@ public class PbfBlobDecoder implements Runnable {
          */
     }
 
-    // Runge: add variable to reuse it multiple times
+    // Modification by Maxim Rylov: entityTags object moved to class members. this allows avoiding unneded allocations.
     private Map<String, String> entityTags = null;
 
     private Map<String, String> buildTags(List<Integer> keys, List<Integer> values, PbfFieldDecoder fieldDecoder) {
@@ -231,7 +231,7 @@ public class PbfBlobDecoder implements Runnable {
             // Build the tags. The key and value string indexes are sequential
             // in the same PBF array. Each set of tags is delimited by an index
             // with a value of 0.
-            Map<String, String> tags = entityTags; // Runge
+            Map<String, String> tags = entityTags; // Modification by Maxim Rylov: Make use of a class variable.
 
             while (keysValuesIterator.hasNext()) {
                 int keyIndex = keysValuesIterator.next();
@@ -267,7 +267,7 @@ public class PbfBlobDecoder implements Runnable {
     private void processWays(List<Osmformat.Way> ways, PbfFieldDecoder fieldDecoder) {
         for (Osmformat.Way way : ways) {
             Map<String, String> tags = buildTags(way.getKeysList(), way.getValsList(), fieldDecoder);
-            ReaderWay osmWay = new ReaderWay(way.getId(), way.getRefsList().size()); // Runge
+            ReaderWay osmWay = new ReaderWay(way.getId(), way.getRefsList().size()); // Modification by Maxim Rylov:  Make use of a constructor with capacity parameter.
             osmWay.setTags(tags);
 
             // Build up the list of way nodes for the way. The node ids are
