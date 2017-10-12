@@ -118,6 +118,9 @@ public class OSMReader implements DataReader {
     private File osmFile;
     private Date osmDataDate;
     private boolean dontCreateStorage = false;
+    
+    // Modification by Maxim Rylov
+    private boolean calcDistance3D = true;
 
     public OSMReader(GraphHopperStorage ghStorage) {
         this.ghStorage = ghStorage;
@@ -129,6 +132,11 @@ public class OSMReader implements DataReader {
         osmNodeIdToNodeFlagsMap = new GHLongLongHashMap(200, .5f);
         osmWayIdToRouteWeightMap = new GHLongLongHashMap(200, .5f);
         pillarInfo = new PillarInfo(nodeAccess.is3D(), ghStorage.getDirectory());
+    }
+    
+    public void setCalcDistance3D(boolean value)
+    {
+    	calcDistance3D = value;
     }
 
     @Override
@@ -733,7 +741,12 @@ public class OSMReader implements DataReader {
             if (pointList.is3D()) {
                 ele = pointList.getElevation(i);
                 if (!distCalc.isCrossBoundary(lon, prevLon))
-                    towerNodeDistance += distCalc3D.calcDist(prevLat, prevLon, prevEle, lat, lon, ele);
+                {
+                	if (calcDistance3D)
+                      towerNodeDistance += distCalc3D.calcDist(prevLat, prevLon, prevEle, lat, lon, ele);
+                	else
+                		towerNodeDistance += distCalc.calcDist(prevLat, prevLon, lat, lon);
+                }
                 prevEle = ele;
             } else if (!distCalc.isCrossBoundary(lon, prevLon))
                 towerNodeDistance += distCalc.calcDist(prevLat, prevLon, lat, lon);
