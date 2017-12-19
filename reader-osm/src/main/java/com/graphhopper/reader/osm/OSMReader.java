@@ -44,6 +44,10 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.Map;
+import java.util.Map.Entry;
+
+
 
 import static com.graphhopper.util.Helper.nf;
 
@@ -106,6 +110,7 @@ public class OSMReader implements DataReader {
     private LongIntMap osmNodeIdToInternalNodeMap;
     private GHLongLongHashMap osmNodeIdToNodeFlagsMap;
     private GHLongLongHashMap osmWayIdToRouteWeightMap;
+    private HashMap<Long, Map<String, Object>> osmNodeIdToReaderNodeMap;
     // stores osm way ids used by relations to identify which edge ids needs to be mapped later
     private GHLongHashSet osmWayIdSet = new GHLongHashSet();
     private IntLongMap edgeIdToOsmWayIdMap;
@@ -131,6 +136,7 @@ public class OSMReader implements DataReader {
         osmNodeIdToInternalNodeMap = new GHLongIntBTree(200);
         osmNodeIdToNodeFlagsMap = new GHLongLongHashMap(200, .5f);
         osmWayIdToRouteWeightMap = new GHLongLongHashMap(200, .5f);
+        osmNodeIdToReaderNodeMap = new HashMap<Long, Map<String, Object>>();
         pillarInfo = new PillarInfo(nodeAccess.is3D(), ghStorage.getDirectory());
     }
     
@@ -426,10 +432,18 @@ public class OSMReader implements DataReader {
             }
         }
 
-        onProcessWay(way);
 
         for (EdgeIteratorState edge : createdEdges) {
             encodingManager.applyWayTags(way, edge);
+        }
+
+        // Get all properties of non-end nodes of the way and put them as the way
+        // properties. The osmNodeIdToReaderNodeMap is created beforehand in the node processing step.
+
+        applyNodeTagsToWay(osmNodeIdToReaderNodeMap, way);
+        onProcessWay(way);
+
+        for (EdgeIteratorState edge : createdEdges) {
             onProcessEdge(way, edge);
         }
     }
@@ -442,6 +456,12 @@ public class OSMReader implements DataReader {
 
     // Modification by Maxim Rylov: Added a new method.
     protected void onProcessWay(ReaderWay way) 
+    {
+
+    }
+
+    // Modification by Hendrik Leuschner: Added a new method.
+    protected void applyNodeTagsToWay(HashMap<Long, Map<String, Object>> map, ReaderWay way)
     {
 
     }
@@ -589,6 +609,7 @@ public class OSMReader implements DataReader {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE) {
             pillarInfo.setNode(nextPillarId, lat, lon, ele);
+            osmNodeIdToReaderNodeMap.put(node.getId(), node.getTags());
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
         }
