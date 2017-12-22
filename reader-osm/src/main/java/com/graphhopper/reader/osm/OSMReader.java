@@ -127,6 +127,10 @@ public class OSMReader implements DataReader {
     // Modification by Maxim Rylov
     private boolean calcDistance3D = true;
 
+    public static final String[] HGV_VALUES = new String[] { "maxheight", "maxweight", "maxweight:hgv", "maxwidth", "maxlength", "maxlength:hgv", "maxaxleload" };
+    public static final Set<String> hgv_tags = new HashSet<>(Arrays.asList(HGV_VALUES));
+
+
     public OSMReader(GraphHopperStorage ghStorage) {
         this.ghStorage = ghStorage;
         this.graph = ghStorage;
@@ -609,7 +613,17 @@ public class OSMReader implements DataReader {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE) {
             pillarInfo.setNode(nextPillarId, lat, lon, ele);
-            osmNodeIdToReaderNodeMap.put(node.getId(), node.getTags());
+            java.util.Iterator<Entry<String, Object>> it = node.getTags().entrySet().iterator();
+            Map<String, Object> temp = new HashMap<>();
+
+            while (it.hasNext()) {
+                Map.Entry<String, Object> pairs = it.next();
+                String key = pairs.getKey();
+                if(!hgv_tags.contains(key))
+                    continue;
+                temp.put(key, pairs.getValue());
+            }
+            if(!temp.isEmpty()) osmNodeIdToReaderNodeMap.put(node.getId(), temp);
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
         }
