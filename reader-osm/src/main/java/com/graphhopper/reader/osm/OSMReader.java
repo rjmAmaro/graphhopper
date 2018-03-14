@@ -127,7 +127,7 @@ public class OSMReader implements DataReader {
     // Modification by Maxim Rylov
     private boolean calcDistance3D = true;
 
-    private Set<String> nodeTags = new HashSet<>();
+    private Set<String> nodeTags = new HashSet<>();     // Storage for tags that should be extracted on OSM nodes
     public static final String[] HGV_VALUES = new String[] { "maxheight", "maxweight", "maxweight:hgv", "maxwidth", "maxlength", "maxlength:hgv", "maxaxleload" };
 
     public OSMReader(GraphHopperStorage ghStorage) {
@@ -145,10 +145,22 @@ public class OSMReader implements DataReader {
         this.nodeTags.addAll(Arrays.asList(HGV_VALUES));
     }
 
+    /**
+     * Add a key to the list of tag keys that should be stored against nodes if present in the OSM data.
+     *
+     * @param tag       The key of the tag to have data stored about
+     */
     public void addNodeTag(String tag) {
         this.nodeTags.add(tag);
     }
 
+    /**
+     * Get the keys and values for tags that have been stored against a node. The decision to store this information
+     * is based on the tags stored in the nodeTags variable.
+     *
+     * @param nodeId        The osm id of the node that tags are required for
+     * @return              A Hashmap of the tags, or if no tags are stored then an empty Hashmap
+     */
     public Map<String,Object> getStoredTagsForNode(long nodeId) {
         if(osmNodeIdToReaderNodeMap.containsKey(nodeId)) {
             return osmNodeIdToReaderNodeMap.get(nodeId);
