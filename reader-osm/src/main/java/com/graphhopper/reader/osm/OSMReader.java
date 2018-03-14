@@ -127,9 +127,8 @@ public class OSMReader implements DataReader {
     // Modification by Maxim Rylov
     private boolean calcDistance3D = true;
 
+    private Set<String> nodeTags = new HashSet<>();     // Storage for tags that should be extracted on OSM nodes
     public static final String[] HGV_VALUES = new String[] { "maxheight", "maxweight", "maxweight:hgv", "maxwidth", "maxlength", "maxlength:hgv", "maxaxleload" };
-    public static final Set<String> hgv_tags = new HashSet<>(Arrays.asList(HGV_VALUES));
-
 
     public OSMReader(GraphHopperStorage ghStorage) {
         this.ghStorage = ghStorage;
@@ -142,6 +141,32 @@ public class OSMReader implements DataReader {
         osmWayIdToRouteWeightMap = new GHLongLongHashMap(200, .5f);
         osmNodeIdToReaderNodeMap = new HashMap<Long, Map<String, Object>>();
         pillarInfo = new PillarInfo(nodeAccess.is3D(), ghStorage.getDirectory());
+
+        this.nodeTags.addAll(Arrays.asList(HGV_VALUES));
+    }
+
+    /**
+     * Add a key to the list of tag keys that should be stored against nodes if present in the OSM data.
+     *
+     * @param tag       The key of the tag to have data stored about
+     */
+    public void addNodeTag(String tag) {
+        this.nodeTags.add(tag);
+    }
+
+    /**
+     * Get the keys and values for tags that have been stored against a node. The decision to store this information
+     * is based on the tags stored in the nodeTags variable.
+     *
+     * @param nodeId        The osm id of the node that tags are required for
+     * @return              A Hashmap of the tags, or if no tags are stored then an empty Hashmap
+     */
+    public Map<String,Object> getStoredTagsForNode(long nodeId) {
+        if(osmNodeIdToReaderNodeMap.containsKey(nodeId)) {
+            return osmNodeIdToReaderNodeMap.get(nodeId);
+        } else {
+            return new HashMap<>();
+        }
     }
     
     public void setCalcDistance3D(boolean value)
@@ -333,7 +358,7 @@ public class OSMReader implements DataReader {
     /**
      * Process properties, encode flags and create edges for the way.
      */
-    void processWay(ReaderWay way) {
+    protected void processWay(ReaderWay way) {
         if (way.getNodes().size() < 2)
             return;
 
@@ -464,6 +489,16 @@ public class OSMReader implements DataReader {
 
     }
 
+    /**
+     * Holder method to be overridden so that processing on nodes can be performed
+     * @param node      The node to be processed
+     *
+     * @return  A ReaderNode object (generally the object that was passed in)
+     */
+    protected ReaderNode onProcessNode(ReaderNode node) {
+        return node;
+    }
+
     // Modification by Hendrik Leuschner: Added a new method.
     protected void applyNodeTagsToWay(HashMap<Long, Map<String, Object>> map, ReaderWay way)
     {
@@ -586,6 +621,7 @@ public class OSMReader implements DataReader {
 
     private void processNode(ReaderNode node) {
         if (isInBounds(node)) {
+            node = onProcessNode(node);
             addNode(node);
 
             // analyze node tags for barriers
@@ -609,23 +645,29 @@ public class OSMReader implements DataReader {
         double lat = node.getLat();
         double lon = node.getLon();
         double ele = getElevation(node);
+
+        // Temporary store for tags to add
+        Map<String,Object> tagsToStore = new HashMap<>();
+        Set<String> tags = node.getTags().keySet();
+        // Check if we want to store any of these tags
+        for(String tag : tags) {
+            if(this.nodeTags.contains(tag)) {
+                // we want to save its value
+                tagsToStore.put(tag, node.getTag(tag));
+            }
+        }
+
         if (nodeType == TOWER_NODE) {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE) {
             pillarInfo.setNode(nextPillarId, lat, lon, ele);
-            java.util.Iterator<Entry<String, Object>> it = node.getTags().entrySet().iterator();
-            Map<String, Object> temp = new HashMap<>();
-
-            while (it.hasNext()) {
-                Map.Entry<String, Object> pairs = it.next();
-                String key = pairs.getKey();
-                if(!hgv_tags.contains(key))
-                    continue;
-                temp.put(key, pairs.getValue());
-            }
-            if(!temp.isEmpty()) osmNodeIdToReaderNodeMap.put(node.getId(), temp);
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
+        }
+
+        // Hold the tags against the node
+        if(!tagsToStore.isEmpty()) {
+            osmNodeIdToReaderNodeMap.put(node.getId(), tagsToStore);
         }
         return true;
     }
@@ -846,18 +888,25 @@ public class OSMReader implements DataReader {
         double lat = pillarInfo.getLatitude(tmpNode);
         double lon = pillarInfo.getLongitude(tmpNode);
         double ele = pillarInfo.getElevation(tmpNode);
-        if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE)
-            throw new RuntimeException("Conversion pillarNode to towerNode already happended!? " + "osmId:" + osmId
-                    + " pillarIndex:" + tmpNode);
+        if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE) {
+            // If the conversion has already happened or we just cant find the pillar node, then don't kill the system,
+            // just try and get the tower node. If that fails, then kill the system
+            tmpNode = getNodeMap().get(osmId);
+            if(tmpNode == EMPTY_NODE || tmpNode < 0) {
+                throw new RuntimeException("Conversion pillarNode to towerNode already happended!? " + "osmId:" + osmId
+                        + " pillarIndex:" + tmpNode);
+            }
+        } else {
 
-        if (convertToTowerNode) {
-            // convert pillarNode type to towerNode, make pillar values invalid
-            pillarInfo.setNode(tmpNode, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-            tmpNode = addTowerNode(osmId, lat, lon, ele);
-        } else if (pointList.is3D())
-            pointList.add(lat, lon, ele);
-        else
-            pointList.add(lat, lon);
+            if (convertToTowerNode) {
+                // convert pillarNode type to towerNode, make pillar values invalid
+                pillarInfo.setNode(tmpNode, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+                tmpNode = addTowerNode(osmId, lat, lon, ele);
+            } else if (pointList.is3D())
+                pointList.add(lat, lon, ele);
+            else
+                pointList.add(lat, lon);
+        }
 
         return (int) tmpNode;
     }
