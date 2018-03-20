@@ -645,29 +645,23 @@ public class OSMReader implements DataReader {
         double lat = node.getLat();
         double lon = node.getLon();
         double ele = getElevation(node);
-
-        // Temporary store for tags to add
-        Map<String,Object> tagsToStore = new HashMap<>();
-        Set<String> tags = node.getTags().keySet();
-        // Check if we want to store any of these tags
-        for(String tag : tags) {
-            if(this.nodeTags.contains(tag)) {
-                // we want to save its value
-                tagsToStore.put(tag, node.getTag(tag));
-            }
-        }
-
         if (nodeType == TOWER_NODE) {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE) {
             pillarInfo.setNode(nextPillarId, lat, lon, ele);
+            java.util.Iterator<Entry<String, Object>> it = node.getTags().entrySet().iterator();
+            Map<String, Object> temp = new HashMap<>();
+
+            while (it.hasNext()) {
+                Map.Entry<String, Object> pairs = it.next();
+                String key = pairs.getKey();
+                if(!nodeTags.contains(key))
+                    continue;
+                temp.put(key, pairs.getValue());
+            }
+            if(!temp.isEmpty()) osmNodeIdToReaderNodeMap.put(node.getId(), temp);
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
-        }
-
-        // Hold the tags against the node
-        if(!tagsToStore.isEmpty()) {
-            osmNodeIdToReaderNodeMap.put(node.getId(), tagsToStore);
         }
         return true;
     }
