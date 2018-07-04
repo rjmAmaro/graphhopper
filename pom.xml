@@ -71,6 +71,7 @@
         <url>https://github.com/graphhopper/graphhopper/issues</url>
     </issueManagement>
 
+
     <modules>
         <module>core</module>
         <module>reader-osm</module>
