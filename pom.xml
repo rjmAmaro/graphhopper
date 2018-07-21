@@ -18,7 +18,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <commons-compress.version>1.12</commons-compress.version>
-        <jackson.version>2.8.4</jackson.version>
+        <jackson.version>2.8.11.1</jackson.version>
 
         <org-netbeans-modules-editor-indent.CodeStyle.project.indent-shift-width>4</org-netbeans-modules-editor-indent.CodeStyle.project.indent-shift-width>
         <org-netbeans-modules-editor-indent.CodeStyle.project.spaces-per-tab>4</org-netbeans-modules-editor-indent.CodeStyle.project.spaces-per-tab>
@@ -267,7 +267,7 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties />
+            <properties/>
             <modules>                
                 <!-- See https://github.com/graphhopper/graphhopper/pull/874#issuecomment-261231518
                 Currently works for jdk8 only -->
