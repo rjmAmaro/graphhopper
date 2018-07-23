@@ -68,13 +68,13 @@ import static com.graphhopper.util.Parameters.Algorithms.*;
 public class GraphHopper implements GraphHopperAPI {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final String fileLockName = "gh.lock";
-    private final Set<RoutingAlgorithmFactoryDecorator> algoDecorators = new LinkedHashSet<>();
+    protected final Set<RoutingAlgorithmFactoryDecorator> algoDecorators = new LinkedHashSet<>();
     // utils
     private final TranslationMap trMap = new TranslationMap().doImport();
     boolean removeZipped = true;
     boolean enableInstructions = true;
     // for graph:
-    private GraphHopperStorage ghStorage;
+    protected GraphHopperStorage ghStorage;
     private EncodingManager encodingManager;
     private int defaultSegmentSize = -1;
     private String ghLocation = "";
@@ -88,7 +88,7 @@ public class GraphHopper implements GraphHopperAPI {
     // for routing
     private int maxRoundTripRetries = 3;
     private boolean simplifyResponse = true;
-    private TraversalMode traversalMode = TraversalMode.NODE_BASED;
+    protected TraversalMode traversalMode = TraversalMode.NODE_BASED;
     private int maxVisitedNodes = Integer.MAX_VALUE;
 
     private int nonChMaxWaypointDistance = Integer.MAX_VALUE;
