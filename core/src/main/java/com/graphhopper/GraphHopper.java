@@ -72,7 +72,7 @@ public class GraphHopper implements GraphHopperAPI {
     // utils
     private final TranslationMap trMap = new TranslationMap().doImport();
     boolean removeZipped = true;
-    boolean enableInstructions = true;
+    protected boolean enableInstructions = true;
     // for graph:
     protected GraphHopperStorage ghStorage;
     private EncodingManager encodingManager;
@@ -85,6 +85,7 @@ public class GraphHopper implements GraphHopperAPI {
     private boolean allowWrites = true;
     private String preferredLanguage = "";
     private boolean fullyLoaded = false;
+
     // for routing
     private int maxRoundTripRetries = 3;
     private boolean simplifyResponse = true;
@@ -141,7 +142,7 @@ public class GraphHopper implements GraphHopperAPI {
     /**
      * @return the first flag encoder of the encoding manager
      */
-    FlagEncoder getDefaultVehicle() {
+    protected FlagEncoder getDefaultVehicle() {
         if (encodingManager == null)
             throw new IllegalStateException("No encoding manager specified or loaded");
 
@@ -193,6 +194,14 @@ public class GraphHopper implements GraphHopperAPI {
      */
     protected int getWorkerThreads() {
         return dataReaderWorkerThreads;
+    }
+
+    public int getMaxRoundTripRetries() {
+        return maxRoundTripRetries;
+    }
+
+    public boolean isCalcPoints() {
+        return calcPoints;
     }
 
     /**
@@ -363,6 +372,16 @@ public class GraphHopper implements GraphHopperAPI {
         return enableInstructions;
     }
 
+    public boolean isSimplifyResponse() {
+        return simplifyResponse;
+    }
+
+    public boolean isFullyLoaded() {
+        return fullyLoaded;
+    }
+
+
+
     /**
      * This method specifies if the import should include way names to be able to return
      * instructions for a route.
@@ -501,6 +520,11 @@ public class GraphHopper implements GraphHopperAPI {
         this.sortGraph = sortGraph;
         return this;
     }
+
+    public ReadWriteLock getReadWriteLock() {
+        return readWriteLock;
+    }
+
 
     public boolean isAllowWrites() {
         return allowWrites;
@@ -1173,7 +1197,7 @@ public class GraphHopper implements GraphHopperAPI {
         return new ChangeGraphHelper(graph, locationIndex);
     }
 
-    private void checkIfPointsAreInBounds(List<GHPoint> points) {
+    protected void checkIfPointsAreInBounds(List<GHPoint> points) {
         BBox bounds = getGraphHopperStorage().getBounds();
         for (int i = 0; i < points.size(); i++) {
             GHPoint point = points.get(i);
@@ -1183,7 +1207,7 @@ public class GraphHopper implements GraphHopperAPI {
         }
     }
 
-    private void checkNonChMaxWaypointDistance(List<GHPoint> points) {
+    protected void checkNonChMaxWaypointDistance(List<GHPoint> points) {
         if (nonChMaxWaypointDistance == Integer.MAX_VALUE) {
             return;
         }
