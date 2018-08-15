@@ -55,8 +55,11 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
         this(Collections.<Weighting>emptyList(), dir, encodingManager, withElevation, extendedStorage);
     }
 
+    public GraphHopperStorage(List<? extends Weighting> chWeightings, Directory dir, final EncodingManager encodingManager, boolean withElevation, GraphExtension extendedStorage) {
+        this(chWeightings, dir, encodingManager, withElevation, extendedStorage, null);
+    }
     public GraphHopperStorage(List<? extends Weighting> chWeightings, Directory dir,
-            final EncodingManager encodingManager, boolean withElevation, GraphExtension extendedStorage) {
+            final EncodingManager encodingManager, boolean withElevation, GraphExtension extendedStorage, List<String> types) {
         if (extendedStorage == null)
             throw new IllegalArgumentException("GraphExtension cannot be null, use NoOpExtension");
 
@@ -84,9 +87,12 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
         };
 
         this.baseGraph = new BaseGraph(dir, encodingManager, withElevation, listener, extendedStorage);
-        for (Weighting w : chWeightings) {
-            chGraphs.add(new CHGraphImpl(w, dir, this.baseGraph));
+        for (int i = 0; i < chWeightings.size(); i++)  {
+            chGraphs.add(new CHGraphImpl(chWeightings.get(i), dir, this.baseGraph, types.get(i)));
         }
+//        for (Weighting w : chWeightings) {
+//            chGraphs.add(new CHGraphImpl(w, dir, this.baseGraph, type));
+//        }
     }
 
     /**

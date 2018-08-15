@@ -43,7 +43,7 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 	// 2 bits for access, for now only 32bit => not Long.MAX
 	private static final long MAX_WEIGHT_LONG = (Integer.MAX_VALUE >> 2) << 2;
 	private static final double MAX_WEIGHT = (Integer.MAX_VALUE >> 2) / WEIGHT_FACTOR;
-	final DataAccess shortcuts;
+	 DataAccess shortcuts;
 	final DataAccess nodesCH;
 	final long scDirMask = PrepareEncoder.getScDirMask();
 	private final BaseGraph baseGraph;
@@ -58,15 +58,15 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 	private int S_SKIP_EDGE1, S_SKIP_EDGE2;
 	private int shortcutCount = 0;
 
-	CHGraphImpl(Weighting w, Directory dir, final BaseGraph baseGraph) {
+	CHGraphImpl(Weighting w, Directory dir, final BaseGraph baseGraph, final String type) {
 		if (w == null)
 			throw new IllegalStateException("Weighting for CHGraph cannot be null");
 
 		this.weighting = w;
 		this.baseGraph = baseGraph;
 		final String name = AbstractWeighting.weightingToFileName(w);
-		this.nodesCH = dir.find("nodes_ch_" + name);
-		this.shortcuts = dir.find("shortcuts_" + name);
+		this.nodesCH = dir.find("nodes_" + type + "_" + name);
+		this.shortcuts = dir.find("shortcuts_" + type + "_" + name);
 		this.chEdgeAccess = new EdgeAccess(shortcuts, baseGraph.bitUtil) {
 			@Override
 			final EdgeIterable createSingleEdge(EdgeFilter edgeFilter) {
@@ -360,6 +360,12 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 	void setSegmentSize(int bytes) {
 		nodesCH.setSegmentSize(bytes);
 		shortcuts.setSegmentSize(bytes);
+	}
+
+	public CHGraphImpl setShortcutsStorage(Weighting w, Directory dir, String suffix){
+		final String name = AbstractWeighting.weightingToFileName(w);
+		this.shortcuts = dir.find("shortcuts_" + suffix + name);
+		return this;
 	}
 
 	@Override
