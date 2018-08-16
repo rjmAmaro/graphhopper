@@ -66,6 +66,12 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
         if (encodingManager == null)
             throw new IllegalArgumentException(
                     "EncodingManager needs to be non-null since 0.7. Create one using new EncodingManager or EncodingManager.create(flagEncoderFactory, ghLocation)");
+        //default to ch
+        if(types == null && chWeightings != null){
+            types = new ArrayList<>();
+            for(int i = 0; i < chWeightings.size(); i++)
+                types.add("ch");
+        }
 
         this.encodingManager = encodingManager;
         this.dir = dir;
