@@ -419,7 +419,9 @@ public class OSMReader implements DataReader {
         LongArrayList osmNodeIds = way.getNodes();
         // Estimate length of ways containing a route tag e.g. for ferry speed calculation
         if (osmNodeIds.size() > 1) {
-            int first = getNodeMap().get(osmNodeIds.get(0));
+            // ORS-GH MOD START
+            // ORG CODE START
+            /*int first = getNodeMap().get(osmNodeIds.get(0));
             int last = getNodeMap().get(osmNodeIds.get(osmNodeIds.size() - 1));
             double firstLat = getTmpLatitude(first), firstLon = getTmpLongitude(first);
             double lastLat = getTmpLatitude(last), lastLon = getTmpLongitude(last);
@@ -428,7 +430,50 @@ public class OSMReader implements DataReader {
                 // Add artificial tag for the estimated distance and center
                 way.setTag("estimated_distance", estimatedDist);
                 way.setTag("estimated_center", new GHPoint((firstLat + lastLat) / 2, (firstLon + lastLon) / 2));
+            }*/
+            // ORG CODE END
+
+            int trafficLightCount = 0;
+            double totalDist = 0d;
+            long nodeId = osmNodeIds.get(0);
+            int prev = getNodeMap().get(nodeId);
+            long nodeFlags = getNodeFlagsMap().get(nodeId);
+            if (nodeFlags == Long.MAX_VALUE) {
+                trafficLightCount++;
+                getNodeFlagsMap().remove(nodeId);
             }
+            double prevLat = getTmpLatitude(prev), prevLon = getTmpLongitude(prev);
+            double latSum = prevLat;
+            double lonSum = prevLon;
+            int sumCount = 1;
+            int len = osmNodeIds.size();
+            for(int i=1; i<len; i++){
+                long nextNodeId = osmNodeIds.get(i);
+                int next = getNodeMap().get(nextNodeId);
+                long nextNodeFlags = getNodeFlagsMap().get(nodeId);
+                if (nextNodeFlags == Long.MAX_VALUE) {
+                    trafficLightCount++;
+                    getNodeFlagsMap().remove(nextNodeFlags);
+                }
+                double nextLat = getTmpLatitude(next), nextLon = getTmpLongitude(next);
+                if(!Double.isNaN(prevLat) && !Double.isNaN(prevLon) && !Double.isNaN(nextLat) && !Double.isNaN(nextLon)) {
+                    latSum = latSum + nextLat;
+                    lonSum = lonSum + nextLon;
+                    sumCount++;
+                    totalDist = totalDist + distCalc.calcDist(prevLat, prevLon, nextLat, nextLon);
+
+                    prevLat = nextLat;
+                    prevLon = nextLon;
+                }
+            }
+            if(totalDist>0) {
+                way.setTag("estimated_center", new GHPoint(latSum / sumCount, lonSum / sumCount));
+                way.setTag("estimated_distance", totalDist);
+            }
+            if(trafficLightCount>0){
+                way.setTag("traffic_light_count", trafficLightCount);
+            }
+            // ORS-GH MOD END
         }
 
         if (way.getTag("duration") != null) {
@@ -636,6 +681,15 @@ public class OSMReader implements DataReader {
                 long nodeFlags = encodingManager.handleNodeTags(node);
                 if (nodeFlags != 0)
                     getNodeFlagsMap().put(node.getId(), nodeFlags);
+                // ORS-GH MOD START
+                else if (node.hasTag("highway", "traffic_signals")){
+                    // MARQ24 a silly way to inster the info, that the node is declared
+                    // as traffic light - this 'Long.MAX_VALUE' will be removed again
+                    // from the 'getNodeFlagsMap()' once the estimated_distance will be
+                    // calculated
+                    getNodeFlagsMap().put(node.getId(), Long.MAX_VALUE);
+                }
+                // ORS-GH MOD END
             }
 
             locations++;
