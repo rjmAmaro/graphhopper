@@ -450,10 +450,10 @@ public class OSMReader implements DataReader {
             for(int i=1; i<len; i++){
                 long nextNodeId = osmNodeIds.get(i);
                 int next = getNodeMap().get(nextNodeId);
-                long nextNodeFlags = getNodeFlagsMap().get(nodeId);
+                long nextNodeFlags = getNodeFlagsMap().get(nextNodeId);
                 if (nextNodeFlags == Long.MAX_VALUE) {
                     trafficLightCount++;
-                    getNodeFlagsMap().remove(nextNodeFlags);
+                    getNodeFlagsMap().remove(nextNodeId);
                 }
                 double nextLat = getTmpLatitude(next), nextLon = getTmpLongitude(next);
                 if(!Double.isNaN(prevLat) && !Double.isNaN(prevLon) && !Double.isNaN(nextLat) && !Double.isNaN(nextLon)) {
