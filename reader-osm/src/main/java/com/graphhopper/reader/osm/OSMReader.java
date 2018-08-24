@@ -74,10 +74,10 @@ public class OSMReader implements DataReader {
     private static final Logger LOGGER = LoggerFactory.getLogger(OSMReader.class);
     private final GraphStorage ghStorage;
     private final Graph graph;
-    // ORS-GH MOD
+    // ORS-GH MOD START
     //private final NodeAccess nodeAccess;
     protected final NodeAccess nodeAccess;
-    // MARQ24 END
+    // ORS-GH MOD END
     private final LongIndexedContainer barrierNodeIds = new LongArrayList();
     private final DistanceCalc distCalc = Helper.DIST_EARTH;
     private final DistanceCalc3D distCalc3D = Helper.DIST_3D;
@@ -126,6 +126,27 @@ public class OSMReader implements DataReader {
     private boolean calcDistance3D = true;
     private Set<String> nodeTags = new HashSet<>();     // Storage for tags that should be extracted on OSM nodes
     public static final String[] HGV_VALUES = new String[] { "maxheight", "maxweight", "maxweight:hgv", "maxwidth", "maxlength", "maxlength:hgv", "maxaxleload" };
+
+    // MARQ24 Addon - flag values to count traffic lights and crossings
+    private static int NODE_EXTRADATA_OFFSET            = 1024;
+    private static int NODE_EXTRADATA_HAS_TRAFFIC_LIGHT = 2048;
+    private static int NODE_EXTRADATA_HAS_CROSSING      = 4096;
+
+    private static HashSet<String> crossing_with_trafficLight;
+    private static HashSet<String> crossing_without;
+    static {
+        //see https://wiki.openstreetmap.org/wiki/DE:Key:crossing
+        crossing_with_trafficLight = new HashSet<>(4);
+        crossing_with_trafficLight.add("traffic_signals");
+        crossing_with_trafficLight.add("traffic_lights");
+        crossing_with_trafficLight.add("toucan");
+        crossing_with_trafficLight.add("pegasus");
+
+        crossing_without  = new HashSet<>(3);
+        crossing_without.add("uncontrolled");
+        crossing_without.add("zebra");
+        crossing_without.add("island");
+    }
     // ORS-GH MOD END
 
     public OSMReader(GraphHopperStorage ghStorage) {
@@ -434,12 +455,18 @@ public class OSMReader implements DataReader {
             // ORG CODE END
 
             int trafficLightCount = 0;
+            int crossingCount = 0;
             double totalDist = 0d;
             long nodeId = osmNodeIds.get(0);
             int prev = getNodeMap().get(nodeId);
             long nodeFlags = getNodeFlagsMap().get(nodeId);
-            if (nodeFlags == Long.MAX_VALUE) {
-                trafficLightCount++;
+            if (nodeFlags > NODE_EXTRADATA_OFFSET) {
+                if((nodeFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
+                    trafficLightCount++;
+                }
+                if((nodeFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
+                    crossingCount++;
+                }
                 getNodeFlagsMap().remove(nodeId);
             }
             double prevLat = getTmpLatitude(prev), prevLon = getTmpLongitude(prev);
@@ -451,8 +478,13 @@ public class OSMReader implements DataReader {
                 long nextNodeId = osmNodeIds.get(i);
                 int next = getNodeMap().get(nextNodeId);
                 long nextNodeFlags = getNodeFlagsMap().get(nextNodeId);
-                if (nextNodeFlags == Long.MAX_VALUE) {
-                    trafficLightCount++;
+                if (nextNodeFlags > NODE_EXTRADATA_OFFSET) {
+                    if((nodeFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
+                        nextNodeFlags++;
+                    }
+                    if((nextNodeFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
+                        crossingCount++;
+                    }
                     getNodeFlagsMap().remove(nextNodeId);
                 }
                 double nextLat = getTmpLatitude(next), nextLon = getTmpLongitude(next);
@@ -466,12 +498,15 @@ public class OSMReader implements DataReader {
                     prevLon = nextLon;
                 }
             }
-            if(totalDist>0) {
-                way.setTag("estimated_center", new GHPoint(latSum / sumCount, lonSum / sumCount));
+            if(totalDist > 0) {
                 way.setTag("estimated_distance", totalDist);
+                way.setTag("estimated_center", new GHPoint(latSum / sumCount, lonSum / sumCount));
             }
-            if(trafficLightCount>0){
+            if(trafficLightCount > 0){
                 way.setTag("traffic_light_count", trafficLightCount);
+            }
+            if(crossingCount > 0){
+                way.setTag("crossing_count", crossingCount);
             }
             // ORS-GH MOD END
         }
@@ -682,12 +717,16 @@ public class OSMReader implements DataReader {
                 if (nodeFlags != 0)
                     getNodeFlagsMap().put(node.getId(), nodeFlags);
                 // ORS-GH MOD START
-                else if (node.hasTag("highway", "traffic_signals")){
-                    // MARQ24 a silly way to inster the info, that the node is declared
-                    // as traffic light - this 'Long.MAX_VALUE' will be removed again
+                else {
+                    // MARQ24 a silly way to insert the info, that the node is declared
+                    // as traffic light or crossing - these values will be removed again
                     // from the 'getNodeFlagsMap()' once the estimated_distance will be
                     // calculated
-                    getNodeFlagsMap().put(node.getId(), Long.MAX_VALUE);
+                    if (node.hasTag("highway", "traffic_signals") || node.hasTag("crossing", crossing_with_trafficLight)){
+                        getNodeFlagsMap().put(node.getId(), NODE_EXTRADATA_OFFSET | NODE_EXTRADATA_HAS_TRAFFIC_LIGHT);
+                    } else if(node.hasTag("highway", "crossing") && node.hasTag("crossing", crossing_without)){
+                        getNodeFlagsMap().put(node.getId(), NODE_EXTRADATA_OFFSET | NODE_EXTRADATA_HAS_CROSSING);
+                    }
                 }
                 // ORS-GH MOD END
             }
