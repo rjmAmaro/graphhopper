@@ -333,12 +333,14 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 	protected int loadEdgesHeader() {
 		shortcutCount = shortcuts.getHeader(0 * 4);
 		shortcutEntryBytes = shortcuts.getHeader(1 * 4);
+		coreNodeCount = shortcuts.getHeader(2 * 4);
 		return 3;
 	}
 
 	protected int setEdgesHeader() {
 		shortcuts.setHeader(0 * 4, shortcutCount);
 		shortcuts.setHeader(1 * 4, shortcutEntryBytes);
+		shortcuts.setHeader(2 * 4, coreNodeCount);
 		return 3;
 	}
 
