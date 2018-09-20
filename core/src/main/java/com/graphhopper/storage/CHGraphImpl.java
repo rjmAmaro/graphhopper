@@ -57,6 +57,8 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 	// shortcut memory layout is synced with edges indices until E_FLAGS, then:
 	private int S_SKIP_EDGE1, S_SKIP_EDGE2;
 	private int shortcutCount = 0;
+	private int coreNodeCount = -1;
+	private String type;
 
 	CHGraphImpl(Weighting w, Directory dir, final BaseGraph baseGraph, final String type) {
 		if (w == null)
@@ -67,6 +69,7 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 		final String name = AbstractWeighting.weightingToFileName(w);
 		this.nodesCH = dir.find("nodes_" + type + "_" + name);
 		this.shortcuts = dir.find("shortcuts_" + type + "_" + name);
+		this.type = type;
 		this.chEdgeAccess = new EdgeAccess(shortcuts, baseGraph.bitUtil) {
 			@Override
 			final EdgeIterable createSingleEdge(EdgeFilter edgeFilter) {
@@ -221,6 +224,25 @@ public class CHGraphImpl implements CHGraph, Storable<CHGraph> {
 	public int getNodes() {
 		return baseGraph.getNodes();
 	}
+
+
+	public int getCoreNodes() {
+		return coreNodeCount;
+	}
+
+	public void setCoreNodes(int coreNodeCount) {
+		this.coreNodeCount = coreNodeCount;
+	}
+
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
 
 	@Override
 	public NodeAccess getNodeAccess() {

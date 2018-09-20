@@ -26,10 +26,7 @@ import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.PMap;
 import com.graphhopper.util.shapes.BBox;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class manages all storage related methods and delegates the calls to the associated graphs.
@@ -136,6 +133,38 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
         CHGraph cg = chGraphs.iterator().next();
         return (T) cg;
+    }
+
+
+    public CHGraphImpl getCoreGraph(Weighting weighting) {
+
+        if (chGraphs.isEmpty())
+            throw new IllegalStateException("Cannot find graph implementation");
+        Iterator<CHGraphImpl> iterator = chGraphs.iterator();
+        while(iterator.hasNext()){
+            CHGraphImpl cg = iterator.next();
+            boolean isWeighting = cg.getWeighting().getName() == weighting.getName();
+            isWeighting = cg.getWeighting().getFlagEncoder().toString() == weighting.getFlagEncoder().toString();
+            //TODO This is very ugly. The weightings are the same but different instances so just getWeighting != weighting :(
+            if(cg.getType() == "core" && cg.getWeighting().getName() == weighting.getName() && cg.getWeighting().getFlagEncoder().toString() == weighting.getFlagEncoder().toString())
+                return cg;
+        }
+
+        throw new IllegalStateException("No core graph was found");
+    }
+
+    public CHGraphImpl getCoreGraph() {
+
+        if (chGraphs.isEmpty())
+            throw new IllegalStateException("Cannot find graph implementation");
+        Iterator<CHGraphImpl> iterator = chGraphs.iterator();
+        while(iterator.hasNext()){
+            CHGraphImpl cg = iterator.next();
+            if(cg.getType() == "core")
+                return cg;
+        }
+
+        throw new IllegalStateException("No core graph was found");
     }
 
     public boolean isCHPossible() {
@@ -359,6 +388,14 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
     @Override
     public int getNodes() {
         return baseGraph.getNodes();
+    }
+
+    public int getCoreNodes() {
+        for (CHGraphImpl cg : chGraphs) {
+            if (cg.getCoreNodes() == -1) continue;
+            return cg.getCoreNodes();
+        }
+        throw new IllegalStateException("No prepared core graph was found");
     }
 
     public int getEdges() {
