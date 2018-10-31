@@ -106,6 +106,7 @@ public class OSMReader implements DataReader {
     private GHLongLongHashMap osmWayIdToRouteWeightMap;
 
     // ORS-GH MOD START
+    private GHLongLongHashMap osmNodeIdToNodeExtraFlagsMap;
     private HashMap<Long, Map<String, Object>> osmNodeIdToReaderNodeMap;
     // ORS-GH MOD END
 
@@ -128,9 +129,8 @@ public class OSMReader implements DataReader {
     public static final String[] HGV_VALUES = new String[] { "maxheight", "maxweight", "maxweight:hgv", "maxwidth", "maxlength", "maxlength:hgv", "maxaxleload" };
 
     // MARQ24 Addon - flag values to count traffic lights and crossings
-    private static int NODE_EXTRADATA_OFFSET            = 1024;
-    private static int NODE_EXTRADATA_HAS_TRAFFIC_LIGHT = 2048;
-    private static int NODE_EXTRADATA_HAS_CROSSING      = 4096;
+    private static int NODE_EXTRADATA_HAS_TRAFFIC_LIGHT = 2;
+    private static int NODE_EXTRADATA_HAS_CROSSING      = 4;
 
     private static HashSet<String> crossing_with_trafficLight;
     private static HashSet<String> crossing_without;
@@ -162,6 +162,7 @@ public class OSMReader implements DataReader {
 
         // ORS-GH MOD START
         osmNodeIdToReaderNodeMap = new HashMap<Long, Map<String, Object>>();
+        osmNodeIdToNodeExtraFlagsMap = new GHLongLongHashMap(200, .5f);
         this.nodeTags.addAll(Arrays.asList(HGV_VALUES));
         // ORS-GH MOD END
     }
@@ -459,15 +460,15 @@ public class OSMReader implements DataReader {
             double totalDist = 0d;
             long nodeId = osmNodeIds.get(0);
             int prev = getNodeMap().get(nodeId);
-            long nodeFlags = getNodeFlagsMap().get(nodeId);
-            if (nodeFlags > NODE_EXTRADATA_OFFSET) {
-                if((nodeFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
+            long nodeExtraFlags = getNodeExtraFlagsMap().get(nodeId);
+            if (nodeExtraFlags > 0) {
+                if((nodeExtraFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
                     trafficLightCount++;
                 }
-                if((nodeFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
+                if((nodeExtraFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
                     crossingCount++;
                 }
-                getNodeFlagsMap().remove(nodeId);
+                getNodeExtraFlagsMap().remove(nodeId);
             }
             double prevLat = getTmpLatitude(prev), prevLon = getTmpLongitude(prev);
             double latSum = prevLat;
@@ -477,15 +478,15 @@ public class OSMReader implements DataReader {
             for(int i=1; i<len; i++){
                 long nextNodeId = osmNodeIds.get(i);
                 int next = getNodeMap().get(nextNodeId);
-                long nextNodeFlags = getNodeFlagsMap().get(nextNodeId);
-                if (nextNodeFlags > NODE_EXTRADATA_OFFSET) {
-                    if((nodeFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
-                        nextNodeFlags++;
+                long nextNodeExtraFlags = getNodeExtraFlagsMap().get(nextNodeId);
+                if (nextNodeExtraFlags > 0) {
+                    if((nextNodeExtraFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
+                        trafficLightCount++;
                     }
-                    if((nextNodeFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
+                    if((nextNodeExtraFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
                         crossingCount++;
                     }
-                    getNodeFlagsMap().remove(nextNodeId);
+                    getNodeExtraFlagsMap().remove(nextNodeId);
                 }
                 double nextLat = getTmpLatitude(next), nextLon = getTmpLongitude(next);
                 if(!Double.isNaN(prevLat) && !Double.isNaN(prevLon) && !Double.isNaN(nextLat) && !Double.isNaN(nextLon)) {
@@ -714,19 +715,16 @@ public class OSMReader implements DataReader {
             // analyze node tags for barriers
             if (node.hasTags()) {
                 long nodeFlags = encodingManager.handleNodeTags(node);
-                if (nodeFlags != 0)
+                if (nodeFlags != 0) {
                     getNodeFlagsMap().put(node.getId(), nodeFlags);
+                }
                 // ORS-GH MOD START
-                else {
-                    // MARQ24 a silly way to insert the info, that the node is declared
-                    // as traffic light or crossing - these values will be removed again
-                    // from the 'getNodeFlagsMap()' once the estimated_distance will be
-                    // calculated
-                    if (node.hasTag("highway", "traffic_signals") || node.hasTag("crossing", crossing_with_trafficLight)){
-                        getNodeFlagsMap().put(node.getId(), NODE_EXTRADATA_OFFSET | NODE_EXTRADATA_HAS_TRAFFIC_LIGHT);
-                    } else if(node.hasTag("highway", "crossing") && node.hasTag("crossing", crossing_without)){
-                        getNodeFlagsMap().put(node.getId(), NODE_EXTRADATA_OFFSET | NODE_EXTRADATA_HAS_CROSSING);
-                    }
+                // MARQ24 a silly way to insert the info, that the node is declared
+                // as traffic light or crossing...
+                if (node.hasTag("highway", "traffic_signals") || node.hasTag("crossing", crossing_with_trafficLight)){
+                    getNodeExtraFlagsMap().put(node.getId(), NODE_EXTRADATA_HAS_TRAFFIC_LIGHT);
+                } else if(node.hasTag("highway", "crossing") && node.hasTag("crossing", crossing_without)){
+                    getNodeExtraFlagsMap().put(node.getId(), NODE_EXTRADATA_HAS_CROSSING);
                 }
                 // ORS-GH MOD END
             }
@@ -755,11 +753,14 @@ public class OSMReader implements DataReader {
             while (it.hasNext()) {
                 Map.Entry<String, Object> pairs = it.next();
                 String key = pairs.getKey();
-                if(!nodeTags.contains(key))
+                if(!nodeTags.contains(key)) {
                     continue;
+                }
                 temp.put(key, pairs.getValue());
             }
-            if(!temp.isEmpty()) osmNodeIdToReaderNodeMap.put(node.getId(), temp);
+            if(!temp.isEmpty()){
+                osmNodeIdToReaderNodeMap.put(node.getId(), temp);
+            }
             // MOD END
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
@@ -1131,6 +1132,12 @@ public class OSMReader implements DataReader {
     protected LongLongMap getNodeFlagsMap() {
         return osmNodeIdToNodeFlagsMap;
     }
+
+    // ORS-GH MOD START
+    protected LongLongMap getNodeExtraFlagsMap() {
+        return osmNodeIdToNodeExtraFlagsMap;
+    }
+    // ORS-GH MOD END
 
     GHLongLongHashMap getRelFlagsMap() {
         return osmWayIdToRouteWeightMap;
