@@ -17,10 +17,11 @@
  */
 package com.graphhopper;
 
-import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.routing.util.HintsMap;
 // ORS-GH MOD START
-import com.graphhopper.routing.util.PathProcessor;
+// ORS TODO: not accessible due to GH's new structure
+//import com.graphhopper.routing.util.EdgeFilter;
+//import com.graphhopper.routing.util.PathProcessor;
 import com.graphhopper.util.Helper;
 import com.graphhopper.util.shapes.GHPoint;
 // ORS-GH MOD END
@@ -51,8 +52,8 @@ public class GHRequest {
     // ORS-GH MOD START
     // Modification by Maxim Rylov: Added class members
     // ORS TODO: not accessible due to GH's new structure
-    private PathProcessor pathProcessor;
-    private EdgeFilter edgeFilter;
+    //private PathProcessor pathProcessor;
+    //private EdgeFilter edgeFilter;
     private double[] maxSearchDistances;
     // ORS-GH MOD END
 
@@ -302,7 +303,7 @@ public class GHRequest {
     // ****************************************************************
     // ORS TODO START: EdgeFilter not accessible due to GH's new structure
     // Modification by Maxim Rylov: Added getEdgeFilter method.
-    public EdgeFilter getEdgeFilter() {
+    /*public EdgeFilter getEdgeFilter() {
         return edgeFilter;
     }
     // Modification by Maxim Rylov: Added setEdgeFilter method.
@@ -312,7 +313,7 @@ public class GHRequest {
         }
         return this;
     }
-    
+
     public PathProcessor getPathProcessor() {
         return this.pathProcessor;
     }
@@ -320,7 +321,7 @@ public class GHRequest {
     public void setPathProcessor(PathProcessor pathProcessor) {
         this.pathProcessor = pathProcessor;
     }
-
+    */
     // Modification by Maxim Rylov: Added getMaxSearchDistances method.
     public double[] getMaxSearchDistances() {
         return maxSearchDistances;
