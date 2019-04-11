@@ -17,7 +17,6 @@
  */
 package com.graphhopper;
 
-import com.graphhopper.routing.util.EdgeAnnotator;
 import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.routing.util.HintsMap;
 // ORS-GH MOD START
@@ -52,7 +51,6 @@ public class GHRequest {
     // ORS-GH MOD START
     // Modification by Maxim Rylov: Added class members
     // ORS TODO: not accessible due to GH's new structure
-    private EdgeAnnotator edgeAnnotator;
     private PathProcessor pathProcessor;
     private EdgeFilter edgeFilter;
     private double[] maxSearchDistances;
@@ -314,13 +312,7 @@ public class GHRequest {
         }
         return this;
     }
-    public EdgeAnnotator getEdgeAnnotator() {
-        return edgeAnnotator;
-    }
-    public void setEdgeAnnotator(EdgeAnnotator edgeAnnotator) {
-        this.edgeAnnotator = edgeAnnotator;
-    }
-
+    
     public PathProcessor getPathProcessor() {
         return this.pathProcessor;
     }
