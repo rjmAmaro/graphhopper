@@ -76,14 +76,18 @@
     <modules>
         <module>core</module>
         <module>reader-osm</module>
+        <!-- ORS-GH MOD remove unused modules
         <module>isochrone</module>
         <module>reader-gtfs</module>
         <module>tools</module>
         <module>web-bundle</module>
+        -->
         <module>api</module>
+        <!-- ORS-GH MOD remove unused modules
         <module>web-api</module>
         <module>web</module>
         <module>client-hc</module>
+        -->
     </modules>
     <build>
         <plugins>

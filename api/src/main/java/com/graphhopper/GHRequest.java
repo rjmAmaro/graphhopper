@@ -17,9 +17,14 @@
  */
 package com.graphhopper;
 
+import com.graphhopper.routing.util.EdgeAnnotator;
+import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.routing.util.HintsMap;
+// ORS-GH MOD START
+import com.graphhopper.routing.util.PathProcessor;
 import com.graphhopper.util.Helper;
 import com.graphhopper.util.shapes.GHPoint;
+// ORS-GH MOD END
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +48,15 @@ public class GHRequest {
     private String algo = "";
     private boolean possibleToAdd = false;
     private Locale locale = Locale.US;
+
+    // ORS-GH MOD START
+    // Modification by Maxim Rylov: Added class members
+    // ORS TODO: not accessible due to GH's new structure
+    private EdgeAnnotator edgeAnnotator;
+    private PathProcessor pathProcessor;
+    private EdgeFilter edgeFilter;
+    private double[] maxSearchDistances;
+    // ORS-GH MOD END
 
     public GHRequest() {
         this(5);
@@ -284,4 +298,49 @@ public class GHRequest {
 
         return res;
     }
+
+    // ****************************************************************
+    // ORS-GH MOD START
+    // ****************************************************************
+    // ORS TODO START: EdgeFilter not accessible due to GH's new structure
+    // Modification by Maxim Rylov: Added getEdgeFilter method.
+    public EdgeFilter getEdgeFilter() {
+        return edgeFilter;
+    }
+    // Modification by Maxim Rylov: Added setEdgeFilter method.
+    public GHRequest setEdgeFilter(EdgeFilter edgeFilter) {
+        if (edgeFilter != null) {
+            this.edgeFilter = edgeFilter;
+        }
+        return this;
+    }
+    public EdgeAnnotator getEdgeAnnotator() {
+        return edgeAnnotator;
+    }
+    public void setEdgeAnnotator(EdgeAnnotator edgeAnnotator) {
+        this.edgeAnnotator = edgeAnnotator;
+    }
+
+    public PathProcessor getPathProcessor() {
+        return this.pathProcessor;
+    }
+
+    public void setPathProcessor(PathProcessor pathProcessor) {
+        this.pathProcessor = pathProcessor;
+    }
+
+    // Modification by Maxim Rylov: Added getMaxSearchDistances method.
+    public double[] getMaxSearchDistances() {
+        return maxSearchDistances;
+    }
+
+    // Modification by Maxim Rylov: Added setMaxSearchDistances method.
+    public void setMaxSearchDistance(double[] distances) {
+        maxSearchDistances = distances;
+    }
+    // ORS TODO END
+
+    // ****************************************************************
+    // ORS-GH MOD END
+    // ****************************************************************
 }
