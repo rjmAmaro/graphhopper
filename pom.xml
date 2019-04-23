@@ -83,8 +83,8 @@
         <module>web-bundle</module>
         -->
         <module>api</module>
-        <!-- ORS-GH MOD remove unused modules
         <module>web-api</module>
+        <!-- ORS-GH MOD remove unused modules
         <module>web</module>
         <module>client-hc</module>
         -->
