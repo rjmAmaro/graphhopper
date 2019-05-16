@@ -75,7 +75,10 @@ public class OSMReader implements DataReader {
     private static final Logger LOGGER = LoggerFactory.getLogger(OSMReader.class);
     private final GraphStorage ghStorage;
     private final Graph graph;
-    private final NodeAccess nodeAccess;
+    // ORS-GH MOD START
+    //private final NodeAccess nodeAccess;
+    protected final NodeAccess nodeAccess;
+    // ORS-GH MOD END
     private final LongIndexedContainer barrierNodeIds = new LongArrayList();
     private final DistanceCalc distCalc = Helper.DIST_EARTH;
     private final DistanceCalc3D distCalc3D = Helper.DIST_3D;
@@ -102,6 +105,12 @@ public class OSMReader implements DataReader {
     private LongIntMap osmNodeIdToInternalNodeMap;
     private GHLongLongHashMap osmNodeIdToNodeFlagsMap;
     private GHLongLongHashMap osmWayIdToRouteWeightMap;
+
+    // ORS-GH MOD START
+    private GHLongLongHashMap osmNodeIdToNodeExtraFlagsMap;
+    private HashMap<Long, Map<String, Object>> osmNodeIdToReaderNodeMap;
+    // ORS-GH MOD END
+
     // stores osm way ids used by relations to identify which edge ids needs to be mapped later
     private GHLongHashSet osmWayIdSet = new GHLongHashSet();
     private IntLongMap edgeIdToOsmWayIdMap;
@@ -115,6 +124,32 @@ public class OSMReader implements DataReader {
     private Date osmDataDate;
     private boolean createStorage = true;
 
+    // ORS-GH MOD START - Modification by Maxim Rylov
+    private boolean calcDistance3D = true;
+    private Set<String> nodeTags = new HashSet<>();     // Storage for tags that should be extracted on OSM nodes
+    public static final String[] HGV_VALUES = new String[] { "maxheight", "maxweight", "maxweight:hgv", "maxwidth", "maxlength", "maxlength:hgv", "maxaxleload" };
+
+    // MARQ24 Addon - flag values to count traffic lights and crossings
+    private static int NODE_EXTRADATA_HAS_TRAFFIC_LIGHT = 2;
+    private static int NODE_EXTRADATA_HAS_CROSSING      = 4;
+
+    private static HashSet<String> crossing_with_trafficLight;
+    private static HashSet<String> crossing_without;
+    static {
+        //see https://wiki.openstreetmap.org/wiki/DE:Key:crossing
+        crossing_with_trafficLight = new HashSet<>(4);
+        crossing_with_trafficLight.add("traffic_signals");
+        crossing_with_trafficLight.add("traffic_lights");
+        crossing_with_trafficLight.add("toucan");
+        crossing_with_trafficLight.add("pegasus");
+
+        crossing_without  = new HashSet<>(3);
+        crossing_without.add("uncontrolled");
+        crossing_without.add("zebra");
+        crossing_without.add("island");
+    }
+    // ORS-GH MOD END
+
     public OSMReader(GraphHopperStorage ghStorage) {
         this.ghStorage = ghStorage;
         this.graph = ghStorage;
@@ -125,7 +160,60 @@ public class OSMReader implements DataReader {
         osmNodeIdToNodeFlagsMap = new GHLongLongHashMap(200, .5f);
         osmWayIdToRouteWeightMap = new GHLongLongHashMap(200, .5f);
         pillarInfo = new PillarInfo(nodeAccess.is3D(), ghStorage.getDirectory());
+
+        // ORS-GH MOD START
+        osmNodeIdToReaderNodeMap = new HashMap<Long, Map<String, Object>>();
+        osmNodeIdToNodeExtraFlagsMap = new GHLongLongHashMap(200, .5f);
+        this.nodeTags.addAll(Arrays.asList(HGV_VALUES));
+        // ORS-GH MOD END
     }
+
+    // *******************************************
+    // ORS-GH MOD START
+    // *******************************************
+
+    public void setCalcDistance3D(boolean value)
+    {
+        calcDistance3D = value;
+    }
+
+    // Modification by Maxim Rylov: Added a new method.
+    protected boolean onCreateEdges(ReaderWay way, LongArrayList osmNodeIds, IntsRef edgeFlags, List<EdgeIteratorState> createdEdges) {
+        return false;
+    }
+
+    // Modification by Maxim Rylov: Added a new method.
+    protected void onProcessWay(ReaderWay way){
+
+    }
+    /**
+     *
+     * Holder method to be overridden so that processing on nodes can be performed
+     * @param node      The node to be processed
+     *
+     * @return  A ReaderNode object (generally the object that was passed in)
+     */
+    protected ReaderNode onProcessNode(ReaderNode node) {
+        return node;
+    }
+
+    // Modification by Hendrik Leuschner: Added a new method.
+    protected void applyNodeTagsToWay(HashMap<Long, Map<String, Object>> map, ReaderWay way) {
+
+    }
+    // Modification by Maxim Rylov: Added a new method.
+    protected void processEdge(ReaderWay way, EdgeIteratorState edge) {
+        encodingManager.applyWayTags(way, edge);
+        onProcessEdge(way, edge);
+    }
+
+    // Modification by Maxim Rylov: Added a new method.
+    protected void onProcessEdge(ReaderWay way, EdgeIteratorState edge){
+
+    }
+    // *******************************************
+    // ORS-GH MOD END
+    // *******************************************
 
     @Override
     public void readGraph() throws IOException {
@@ -306,7 +394,10 @@ public class OSMReader implements DataReader {
     /**
      * Process properties, encode flags and create edges for the way.
      */
-    void processWay(ReaderWay way) {
+    // ORS-GH MOD START
+    //void processWay(ReaderWay way) {
+    protected void processWay(ReaderWay way) {
+        // ORS-GH MOD END
         if (way.getNodes().size() < 2)
             return;
 
@@ -326,7 +417,9 @@ public class OSMReader implements DataReader {
         LongArrayList osmNodeIds = way.getNodes();
         // Estimate length of ways containing a route tag e.g. for ferry speed calculation
         if (osmNodeIds.size() > 1) {
-            int first = getNodeMap().get(osmNodeIds.get(0));
+            // ORS-GH MOD START
+            // ORG CODE START
+            /*int first = getNodeMap().get(osmNodeIds.get(0));
             int last = getNodeMap().get(osmNodeIds.get(osmNodeIds.size() - 1));
             double firstLat = getTmpLatitude(first), firstLon = getTmpLongitude(first);
             double lastLat = getTmpLatitude(last), lastLon = getTmpLongitude(last);
@@ -335,7 +428,74 @@ public class OSMReader implements DataReader {
                 // Add artificial tag for the estimated distance and center
                 way.setTag("estimated_distance", estimatedDist);
                 way.setTag("estimated_center", new GHPoint((firstLat + lastLat) / 2, (firstLon + lastLon) / 2));
+            }*/
+            // ORG CODE END
+
+            int trafficLightCount = 0;
+            int crossingCount = 0;
+            double totalDist = 0d;
+            long nodeId = osmNodeIds.get(0);
+            int first = getNodeMap().get(nodeId);
+            long nodeExtraFlags = getNodeExtraFlagsMap().get(nodeId);
+            if (nodeExtraFlags > 0) {
+                if((nodeExtraFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
+                    trafficLightCount++;
+                }
+                if((nodeExtraFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
+                    crossingCount++;
+                }
+                getNodeExtraFlagsMap().remove(nodeId);
             }
+            double firstLat = getTmpLatitude(first);
+            double firstLon = getTmpLongitude(first);
+            double currLat = firstLat;
+            double currLon = firstLon;
+            double latSum = currLat;
+            double lonSum = currLon;
+            int sumCount = 1;
+            int len = osmNodeIds.size();
+            for(int i=1; i<len; i++){
+                long nextNodeId = osmNodeIds.get(i);
+                int next = getNodeMap().get(nextNodeId);
+                long nextNodeExtraFlags = getNodeExtraFlagsMap().get(nextNodeId);
+                if (nextNodeExtraFlags > 0) {
+                    if((nextNodeExtraFlags|NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) == NODE_EXTRADATA_HAS_TRAFFIC_LIGHT) {
+                        trafficLightCount++;
+                    }
+                    if((nextNodeExtraFlags|NODE_EXTRADATA_HAS_CROSSING) == NODE_EXTRADATA_HAS_CROSSING) {
+                        crossingCount++;
+                    }
+                    getNodeExtraFlagsMap().remove(nextNodeId);
+                }
+                double nextLat = getTmpLatitude(next), nextLon = getTmpLongitude(next);
+                if(!Double.isNaN(currLat) && !Double.isNaN(currLon) && !Double.isNaN(nextLat) && !Double.isNaN(nextLon)) {
+                    latSum = latSum + nextLat;
+                    lonSum = lonSum + nextLon;
+                    sumCount++;
+                    totalDist = totalDist + distCalc.calcDist(currLat, currLon, nextLat, nextLon);
+
+                    currLat = nextLat;
+                    currLon = nextLon;
+                }
+            }
+            // make the simple dist & center calculations (who ever rely on it might want to use it!)
+            if (!Double.isNaN(firstLat) && !Double.isNaN(firstLon) && !Double.isNaN(currLat) && !Double.isNaN(currLon)) {
+                double estimatedDist = distCalc.calcDist(firstLat, firstLon, currLat, currLon);
+                // Add artificial tag for the estimated distance and center
+                way.setTag("estimated_distance", estimatedDist);
+                way.setTag("estimated_center", new GHPoint((firstLat + currLat) / 2, (firstLon + currLon) / 2));
+            }
+            if(totalDist > 0) {
+                way.setTag("exact_distance", totalDist);
+                way.setTag("exact_center", new GHPoint(latSum / sumCount, lonSum / sumCount));
+            }
+            if(trafficLightCount > 0){
+                way.setTag("traffic_light_count", trafficLightCount);
+            }
+            if(crossingCount > 0){
+                way.setTag("crossing_count", crossingCount);
+            }
+            // ORS-GH MOD END
         }
 
         if (way.getTag("duration") != null) {
@@ -402,20 +562,40 @@ public class OSMReader implements DataReader {
                 createdEdges.addAll(addOSMWay(partNodeIds, edgeFlags, wayOsmId));
             }
         } else {
-            // no barriers - simply add the whole way
-            createdEdges.addAll(addOSMWay(way.getNodes(), edgeFlags, wayOsmId));
+            // ORS-GH MOD START
+            if (!onCreateEdges(way, osmNodeIds, edgeFlags, createdEdges)) {
+                // ORS-GH MOD END
+                // no barriers - simply add the whole way
+                createdEdges.addAll(addOSMWay(way.getNodes(), edgeFlags, wayOsmId));
+                // ORS-GH MOD START
+            }
+            // ORS-GH MOD END
         }
 
         for (EdgeIteratorState edge : createdEdges) {
             encodingManager.applyWayTags(way, edge);
         }
+
+        // ORS-GH MOD START
+        // Get all properties of non-end nodes of the way and put them as the way
+        // properties. The osmNodeIdToReaderNodeMap is created beforehand in the node processing step.
+        applyNodeTagsToWay(osmNodeIdToReaderNodeMap, way);
+        onProcessWay(way);
+        for (EdgeIteratorState edge : createdEdges) {
+            onProcessEdge(way, edge);
+        }
+        // ORS-GH MOD END
     }
 
     public void processRelation(ReaderRelation relation) {
         if (relation.hasTag("type", "restriction")) {
             OSMTurnRelation turnRelation = createTurnRelation(relation);
             if (turnRelation != null) {
-                GraphExtension extendedStorage = graph.getExtension();
+                //ORS-GH MOD START
+                // ORG CODE
+                //GraphExtension extendedStorage = graph.getExtension();
+                GraphExtension extendedStorage = HelperORS.getTurnCostExtensions(graph.getExtension());
+                //ORS-GH MOD END
                 if (extendedStorage instanceof TurnCostExtension) {
                     TurnCostExtension tcs = (TurnCostExtension) extendedStorage;
                     Collection<TurnCostTableEntry> entries = analyzeTurnRelation(turnRelation);
@@ -513,6 +693,9 @@ public class OSMReader implements DataReader {
 
     private void processNode(ReaderNode node) {
         if (isInBounds(node)) {
+            // ORS-GH MOD START
+            node = onProcessNode(node);
+            // ORS-GH MOD END
             addNode(node);
 
             // analyze node tags for barriers
@@ -520,6 +703,16 @@ public class OSMReader implements DataReader {
                 long nodeFlags = encodingManager.handleNodeTags(node);
                 if (nodeFlags != 0)
                     getNodeFlagsMap().put(node.getId(), nodeFlags);
+
+                // ORS-GH MOD START
+                // MARQ24 a silly way to insert the info, that the node is declared
+                // as traffic light or crossing...
+                if (node.hasTag("highway", "traffic_signals") || node.hasTag("crossing", crossing_with_trafficLight)){
+                    getNodeExtraFlagsMap().put(node.getId(), NODE_EXTRADATA_HAS_TRAFFIC_LIGHT);
+                } else if(node.hasTag("highway", "crossing") && node.hasTag("crossing", crossing_without)){
+                    getNodeExtraFlagsMap().put(node.getId(), NODE_EXTRADATA_HAS_CROSSING);
+                }
+                // ORS-GH MOD END
             }
 
             locations++;
@@ -540,6 +733,21 @@ public class OSMReader implements DataReader {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE) {
             pillarInfo.setNode(nextPillarId, lat, lon, ele);
+            // MAQR24 MOD START
+            Iterator<Map.Entry<String, Object>> it = node.getTags().entrySet().iterator();
+            Map<String, Object> temp = new HashMap<>();
+            while (it.hasNext()) {
+                Map.Entry<String, Object> pairs = it.next();
+                String key = pairs.getKey();
+                if(!nodeTags.contains(key)) {
+                    continue;
+                }
+                temp.put(key, pairs.getValue());
+            }
+            if(!temp.isEmpty()){
+                osmNodeIdToReaderNodeMap.put(node.getId(), temp);
+            }
+            // MOD END
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
         }
@@ -723,7 +931,16 @@ public class OSMReader implements DataReader {
             if (pointList.is3D()) {
                 ele = pointList.getElevation(i);
                 if (!distCalc.isCrossBoundary(lon, prevLon))
-                    towerNodeDistance += distCalc3D.calcDist(prevLat, prevLon, prevEle, lat, lon, ele);
+                    // ORS-GH MOD START
+                    if(calcDistance3D) {
+                        // ORS-GH MOD END
+                        towerNodeDistance += distCalc3D.calcDist(prevLat, prevLon, prevEle, lat, lon, ele);
+                        // ORS-GH MOD START
+                    } else {
+                        // ORS-GH MOD START
+                        towerNodeDistance += distCalc.calcDist(prevLat, prevLon, lat, lon);
+                    }
+                // ORS-GH MOD END
                 prevEle = ele;
             } else if (!distCalc.isCrossBoundary(lon, prevLon))
                 towerNodeDistance += distCalc.calcDist(prevLat, prevLon, lat, lon);
@@ -786,7 +1003,9 @@ public class OSMReader implements DataReader {
         double lat = pillarInfo.getLatitude(tmpNode);
         double lon = pillarInfo.getLongitude(tmpNode);
         double ele = pillarInfo.getElevation(tmpNode);
-        if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE)
+        // ORS-GH MOD START
+        // ORG CODE START
+        /*if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE)
             throw new RuntimeException("Conversion pillarNode to towerNode already happended!? "
                     + "osmId:" + osmId + " pillarIndex:" + tmpNode);
 
@@ -798,14 +1017,39 @@ public class OSMReader implements DataReader {
             pointList.add(lat, lon, ele);
         else
             pointList.add(lat, lon);
+        // ORG CODE END */
 
-        return tmpNode;
+        if (lat == Double.MAX_VALUE || lon == Double.MAX_VALUE) {
+            // If the conversion has already happened or we just cant find the pillar node, then don't kill the system,
+            // just try and get the tower node. If that fails, then kill the system
+            tmpNode = getNodeMap().get(osmId);
+            if(tmpNode == EMPTY_NODE || tmpNode < 0) {
+                throw new RuntimeException("Conversion pillarNode to towerNode already happended!? " + "osmId:" + osmId + " pillarIndex:" + tmpNode);
+            }
+        } else {
+            if (convertToTowerNode) {
+                // convert pillarNode type to towerNode, make pillar values invalid
+                pillarInfo.setNode(tmpNode, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+                tmpNode = addTowerNode(osmId, lat, lon, ele);
+            } else if (pointList.is3D()) {
+                pointList.add(lat, lon, ele);
+            }else {
+                pointList.add(lat, lon);
+            }
+        }
+        // ORS-GH MOD END
+        return (int) tmpNode;
     }
 
     protected void finishedReading() {
         printInfo("way");
         pillarInfo.clear();
-        eleProvider.release();
+        // ORS-GH MOD START
+        // MARQ24: DO NOT CLEAR THE CACHE of the ELEVATION PROVIDERS - since the data will be reused
+        // the provider data will be cleared only after the last VehicleProfile have completed
+        // the work...
+        //eleProvider.release();
+        // ORS-GH MOD END
         osmNodeIdToInternalNodeMap = null;
         osmNodeIdToNodeFlagsMap = null;
         osmWayIdToRouteWeightMap = null;
@@ -888,20 +1132,32 @@ public class OSMReader implements DataReader {
     /**
      * Filter method, override in subclass
      */
-    boolean isInBounds(ReaderNode node) {
+    // ORS-GH MOD START
+    //boolean isInBounds(ReaderNode node) {
+    protected boolean isInBounds(ReaderNode node) {
+        // ORS-GH MOD END
         return true;
     }
 
     /**
      * Maps OSM IDs (long) to internal node IDs (int)
      */
-    protected LongIntMap getNodeMap() {
+    // ORS-GH MOD START
+    //protected LongIntMap getNodeMap() {
+    public LongIntMap getNodeMap() {
+        // ORS-GH MOD END
         return osmNodeIdToInternalNodeMap;
     }
 
     protected LongLongMap getNodeFlagsMap() {
         return osmNodeIdToNodeFlagsMap;
     }
+
+    // ORS-GH MOD START
+    protected LongLongMap getNodeExtraFlagsMap() {
+        return osmNodeIdToNodeExtraFlagsMap;
+    }
+    // ORS-GH MOD END
 
     GHLongLongHashMap getRelFlagsMap() {
         return osmWayIdToRouteWeightMap;
