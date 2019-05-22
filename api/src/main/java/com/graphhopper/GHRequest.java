@@ -301,19 +301,7 @@ public class GHRequest {
     // ****************************************************************
     // ORS-GH MOD START
     // ****************************************************************
-    // ORS TODO START: EdgeFilter not accessible due to GH's new structure
-    // Modification by Maxim Rylov: Added getEdgeFilter method.
-    /*public EdgeFilter getEdgeFilter() {
-        return edgeFilter;
-    }
-    // Modification by Maxim Rylov: Added setEdgeFilter method.
-    public GHRequest setEdgeFilter(EdgeFilter edgeFilter) {
-        if (edgeFilter != null) {
-            this.edgeFilter = edgeFilter;
-        }
-        return this;
-    }
-
+    /*
     public PathProcessor getPathProcessor() {
         return this.pathProcessor;
     }
