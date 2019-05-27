@@ -642,7 +642,7 @@ public class OSMReader implements DataReader {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE) {
             pillarInfo.setNode(nextPillarId, lat, lon, ele);
-            // ORS-MOD START - Store tags from the node so that they can be accessed later
+            // ORS-GH MOD START - Store tags from the node so that they can be accessed later
             Iterator<Map.Entry<String, Object>> it = node.getTags().entrySet().iterator();
             Map<String, Object> temp = new HashMap<>();
             while (it.hasNext()) {
@@ -656,7 +656,7 @@ public class OSMReader implements DataReader {
             if(!temp.isEmpty()){
                 osmNodeTagValues.put(node.getId(), temp);
             }
-            // ORS-MOD END
+            // ORS-GH MOD END
             getNodeMap().put(node.getId(), nextPillarId + 3);
             nextPillarId++;
         }
@@ -1116,14 +1116,14 @@ public class OSMReader implements DataReader {
     }
     // ORS-GH MOD END
 
-    // ORS-MOD START - expose distance calc object
+    // ORS-GH MOD START - expose distance calc object
     protected DistanceCalc getDistanceCalc(boolean use3D) {
         if (use3D)
             return distCalc3D;
         else
             return distCalc;
     }
-    // ORS-MOD END
+    // ORS-GH MOD END
 
     @Override
     public String toString() {
