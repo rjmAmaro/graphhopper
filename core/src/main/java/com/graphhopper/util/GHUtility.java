@@ -28,6 +28,7 @@ import com.graphhopper.routing.util.AllEdgesIterator;
 import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.storage.*;
+import com.graphhopper.util.shapes.BBox;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -491,5 +492,79 @@ public class GHUtility {
         public int getMergeStatus(long flags) {
             throw new UnsupportedOperationException("Not supported. Edge is empty.");
         }
+    }
+
+
+    public static void printGraphForUnitTest(Graph g, FlagEncoder encoder) {
+        printGraphForUnitTest(g, encoder, new BBox(
+                Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+    }
+
+    public static void printGraphForUnitTest(Graph g, FlagEncoder encoder, BBox bBox) {
+        NodeAccess na = g.getNodeAccess();
+        for (int node = 0; node < g.getNodes(); ++node) {
+            if (bBox.contains(na.getLat(node), na.getLon(node))) {
+                System.out.printf(Locale.ROOT, "na.setNode(%d, %f, %f);\n", node, na.getLat(node), na.getLon(node));
+            }
+        }
+        AllEdgesIterator iter = g.getAllEdges();
+        while (iter.next()) {
+            if (bBox.contains(na.getLat(iter.getBaseNode()), na.getLon(iter.getBaseNode())) &&
+                    bBox.contains(na.getLat(iter.getAdjNode()), na.getLon(iter.getAdjNode()))) {
+                printUnitTestEdge(encoder, iter);
+            }
+        }
+    }
+
+    private static void printUnitTestEdge(FlagEncoder flagEncoder, EdgeIteratorState edge) {
+        boolean fwd = edge.isForward(flagEncoder);
+        boolean bwd = edge.isBackward(flagEncoder);
+        if (!fwd && !bwd) {
+            return;
+        }
+        int from = fwd ? edge.getBaseNode() : edge.getAdjNode();
+        int to = fwd ? edge.getAdjNode() : edge.getBaseNode();
+        System.out.printf(Locale.ROOT,
+                "graph.edge(%d, %d, %f, %s);\n", from, to, edge.getDistance(), fwd && bwd ? "true" : "false");
+    }
+
+    public static void buildRandomGraph(Graph graph, long seed, int numNodes, double meanDegree, boolean allowLoops, boolean allowZeroDistance, double pBothDir) {
+        Random random = new Random(seed);
+        for (int i = 0; i < numNodes; ++i) {
+            double lat = 49.4 + (random.nextDouble() * 0.01);
+            double lon = 9.7 + (random.nextDouble() * 0.01);
+            graph.getNodeAccess().setNode(i, lat, lon);
+        }
+        double minDist = Double.MAX_VALUE;
+        double maxDist = Double.MIN_VALUE;
+        int numEdges = (int) (0.5 * meanDegree * numNodes);
+        for (int i = 0; i < numEdges; ++i) {
+            int from = random.nextInt(numNodes);
+            int to = random.nextInt(numNodes);
+            if (!allowLoops && from == to) {
+                continue;
+            }
+            double distance = GHUtility.getDistance(from, to, graph.getNodeAccess());
+            if (!allowZeroDistance) {
+                distance = Math.max(0.001, distance);
+            }
+            // add some random offset for most cases, but also allow duplicate edges with same weight
+            if (random.nextDouble() < 0.8)
+                distance += random.nextDouble() * distance * 0.01;
+            minDist = Math.min(minDist, distance);
+            maxDist = Math.max(maxDist, distance);
+            // using bidirectional edges will increase mean degree of graph above given value
+            boolean bothDirections = random.nextDouble() < pBothDir;
+            graph.edge(from, to, distance, bothDirections);
+        }
+
+    }
+
+    private static double getDistance(int from, int to, NodeAccess nodeAccess) {
+        double fromLat = nodeAccess.getLat(from);
+        double fromLon = nodeAccess.getLon(from);
+        double toLat = nodeAccess.getLat(to);
+        double toLon = nodeAccess.getLon(to);
+        return Helper.DIST_PLANE.calcDist(fromLat, fromLon, toLat, toLon);
     }
 }
