@@ -1034,9 +1034,11 @@ public class OSMReader implements DataReader {
     /**
      * Maps OSM IDs (long) to internal node IDs (int)
      */
-    protected LongIntMap getNodeMap() {
+    // ORS-GH MOD - expose method
+    public LongIntMap getNodeMap() {
         return osmNodeIdToInternalNodeMap;
     }
+    // ORS-GHEND 
 
     protected LongLongMap getNodeFlagsMap() {
         return osmNodeIdToNodeFlagsMap;
