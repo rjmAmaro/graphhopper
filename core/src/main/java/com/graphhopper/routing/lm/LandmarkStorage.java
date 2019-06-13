@@ -232,7 +232,8 @@ public class LandmarkStorage implements Storable<LandmarkStorage> {
             if (distanceInMeter > 50_000 * 7 || /* for tests and convenience we do for now: */ !bounds.isValid())
                 distanceInMeter = 30_000_000;
 
-            double maxWeight = weighting.getMinWeight(distanceInMeter);
+            // multiply by 3 to avoid maxed-out LM distances on small test graphs
+            double maxWeight = weighting.getMinWeight(distanceInMeter) * 3;
             setMaximumWeight(maxWeight);
             additionalInfo = ", maxWeight:" + maxWeight + ", from max distance:" + distanceInMeter / 1000f + "km";
         }
@@ -812,7 +813,7 @@ public class LandmarkStorage implements Storable<LandmarkStorage> {
                 }
             });
 
-            if ((double) maxedout.get() / map.size() > 0.1) {
+            if (maxedout.get()>0) {
                 LOGGER.warn("landmark " + lmIdx + " (" + nodeAccess.getLatitude(lmNodeId) + "," + nodeAccess.getLongitude(lmNodeId) + "): " +
                         "too many weights were maxed out (" + maxedout.get() + "/" + map.size() + "). Use a bigger factor than " + lms.factor
                         + ". For example use the following in the config.properties: weighting=" + weighting.getName() + "|maximum=" + finalMaxWeight.getValue() * 1.2);
