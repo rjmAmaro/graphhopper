@@ -23,6 +23,7 @@ import com.graphhopper.routing.util.HintsMap;
 //import com.graphhopper.routing.util.EdgeFilter;
 //import com.graphhopper.routing.util.PathProcessor;
 import com.graphhopper.util.Helper;
+import com.graphhopper.util.PMap;
 import com.graphhopper.util.shapes.GHPoint;
 // ORS-GH MOD END
 
@@ -301,15 +302,14 @@ public class GHRequest {
     // ****************************************************************
     // ORS-GH MOD START
     // ****************************************************************
-    /*
-    public PathProcessor getPathProcessor() {
-        return this.pathProcessor;
+    private PMap additionalHints;
+    public void  setAdditionalHints (PMap hints) {
+        this.additionalHints = hints;
+    }
+    public PMap getAdditionalHints() {
+        return this.additionalHints;
     }
 
-    public void setPathProcessor(PathProcessor pathProcessor) {
-        this.pathProcessor = pathProcessor;
-    }
-    */
     // Modification by Maxim Rylov: Added getMaxSearchDistances method.
     public double[] getMaxSearchDistances() {
         return maxSearchDistances;
