@@ -24,6 +24,7 @@ import com.graphhopper.reader.*;
 import com.graphhopper.reader.dem.ElevationProvider;
 import com.graphhopper.reader.dem.GraphElevationSmoothing;
 import com.graphhopper.routing.profiles.BooleanEncodedValue;
+import com.graphhopper.routing.util.AbstractFlagEncoder;
 import com.graphhopper.routing.util.DefaultEdgeFilter;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.FlagEncoder;
@@ -409,6 +410,21 @@ public class OSMReader implements DataReader {
 
         for (EdgeIteratorState edge : createdEdges) {
             encodingManager.applyWayTags(way, edge);
+        }
+
+        if (acceptWay.hasConditional()) {
+            // iterate over encoders to fetch conditional values
+            // CAUTION: currently only car flag encoder supports conditionals!
+            for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
+                if (acceptWay.getAccess(encoder.toString()).isConditional()) {
+                    String value = ((AbstractFlagEncoder) encoder).getConditionalTagInspector().getTagValue();
+
+                    for (EdgeIteratorState edge : createdEdges)
+                        edge.setConditional(value);
+                }
+
+            }
+
         }
     }
 
