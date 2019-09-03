@@ -108,6 +108,8 @@ public class ConditionalParser {
         if (conditionalTag == null || conditionalTag.isEmpty() || !conditionalTag.contains("@"))
             return false;
 
+        return true;
+/*
         if (conditionalTag.contains(";")) {
             if (enabledLogs)
                 logger.warn("We do not support multiple conditions yet: " + conditionalTag);
@@ -134,6 +136,8 @@ public class ConditionalParser {
                 return c.isCheckPassed();
         }
         return false;
+
+ */
     }
 
     protected static double parseNumber(String str) {
