@@ -111,21 +111,20 @@ public class Downloader {
 
     public void downloadFile(String url, String toFile) throws IOException {
         HttpURLConnection conn = createConnection(url);
-        InputStream iStream = fetch(conn, false);
         int size = 8 * 1024;
-        BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(toFile), size);
-        InputStream in = new BufferedInputStream(iStream, size);
-        try {
+        try (InputStream iStream = fetch(conn, false);
+                BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(toFile), size);
+                InputStream in = new BufferedInputStream(iStream, size)) {
             byte[] buffer = new byte[size];
             int numRead;
             while ((numRead = in.read(buffer)) != -1) {
                 writer.write(buffer, 0, numRead);
             }
-        } finally {
-            Helper.close(iStream);
-            Helper.close(writer);
-            Helper.close(in);
-        }
+        } //finally {
+            //Helper.close(iStream);
+            //Helper.close(writer);
+            //Helper.close(in);
+        //}
     }
 
     public void downloadAndUnzip(String url, String toFolder, final ProgressListener progressListener) throws IOException {

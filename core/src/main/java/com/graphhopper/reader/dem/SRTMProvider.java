@@ -123,11 +123,15 @@ public class SRTMProvider extends AbstractSRTMElevationProvider {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         byte[] buffer = new byte[0xFFFF];
         int len;
-        while ((len = buff.read(buffer)) > 0) {
-            os.write(buffer, 0, len);
+        try {
+            while ((len = buff.read(buffer)) > 0) {
+                os.write(buffer, 0, len);
+            }
+            os.flush();
+        } finally {
+            Helper.close(buff);
+            zis.close();
         }
-        os.flush();
-        Helper.close(buff);
         return os.toByteArray();
     }
 
