@@ -56,6 +56,10 @@ public class Parameters {
          * round trip algorithm (not yet for CH)
          */
         public static final String ROUND_TRIP = "round_trip";
+        /**
+         * time-dependent A*
+         */
+        public static final String ASTAR_TD = "astartd";
 
         /**
          * All public properties for alternative routing.

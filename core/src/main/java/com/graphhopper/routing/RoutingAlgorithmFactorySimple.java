@@ -17,6 +17,7 @@
  */
 package com.graphhopper.routing;
 
+import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.weighting.BeelineWeightApproximator;
 import com.graphhopper.routing.weighting.WeightApproximator;
 import com.graphhopper.storage.Graph;
@@ -45,6 +46,11 @@ public class RoutingAlgorithmFactorySimple implements RoutingAlgorithmFactory {
         } else if (ASTAR_BI.equalsIgnoreCase(algoStr)) {
             AStarBidirection aStarBi = new AStarBidirection(g, opts.getWeighting(),
                     opts.getTraversalMode());
+            aStarBi.setApproximation(getApproximation(ASTAR_BI, opts, g.getNodeAccess()));
+            ra = aStarBi;
+
+        } else if (ASTAR_TD.equalsIgnoreCase(algoStr)) {
+            AStarBidirection aStarBi = new AStarBidirectionConditional(g, opts.getWeighting(), opts.getTraversalMode());
             aStarBi.setApproximation(getApproximation(ASTAR_BI, opts, g.getNodeAccess()));
             ra = aStarBi;
 
