@@ -24,10 +24,7 @@ import com.graphhopper.routing.*;
 import com.graphhopper.routing.ch.CHAlgoFactoryDecorator;
 import com.graphhopper.routing.ch.PrepareContractionHierarchies;
 import com.graphhopper.routing.lm.LMAlgoFactoryDecorator;
-import com.graphhopper.routing.profiles.DefaultEncodedValueFactory;
-import com.graphhopper.routing.profiles.EncodedValueFactory;
-import com.graphhopper.routing.profiles.EnumEncodedValue;
-import com.graphhopper.routing.profiles.RoadEnvironment;
+import com.graphhopper.routing.profiles.*;
 import com.graphhopper.routing.subnetwork.PrepareRoutingSubnetworks;
 import com.graphhopper.routing.template.AlternativeRoutingTemplate;
 import com.graphhopper.routing.template.RoundTripRoutingTemplate;
@@ -850,12 +847,17 @@ public class GraphHopper implements GraphHopperAPI {
             interpolateBridgesAndOrTunnels();
         }
 
-        AllEdgesIterator edges = ghStorage.getAllEdges();
+        // FIXME: print out debug info on stored conditionals
+        for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
+            String name = encodingManager.getKey(encoder, "conditional_access");
+            if (encodingManager.hasEncodedValue(name)) {
+                BooleanEncodedValue conditionalEnc = encodingManager.getBooleanEncodedValue(name);
 
-        while (edges.next()) {
-            String conditional = edges.getConditional();
-            if (!"".equals(conditional))
-                System.out.println(edges.getEdge() + ": " + conditional);
+                AllEdgesIterator edges = ghStorage.getAllEdges();
+                while (edges.next())
+                    if (edges.get(conditionalEnc))
+                        System.out.println(edges.getEdge() + ": " + edges.getConditional());
+            }
         }
 
         initLocationIndex();
