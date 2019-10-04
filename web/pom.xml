@@ -46,6 +46,16 @@
             <version>${dropwizard.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ch.poole</groupId>
+            <artifactId>ConditionalRestrictionParser</artifactId>
+            <version>${crparser.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.poole</groupId>
+            <artifactId>OpeningHoursParser</artifactId>
+            <version>${ohparser.version}</version>
+        </dependency>
 
         <!-- for integration tests of service -->
         <dependency>
