@@ -231,7 +231,10 @@ public class CarFlagEncoder extends AbstractFlagEncoder {
         if (!firstValue.isEmpty()) {
             if (restrictedValues.contains(firstValue))
                 if (getConditionalTagInspector().isRestrictedWayConditionallyPermitted(way))
-                    return EncodingManager.Access.CONDITIONAL;
+                    if (getConditionalTagInspector().isConditionLazyEvaluated())
+                        return EncodingManager.Access.CONDITIONAL;
+                    else
+                        return EncodingManager.Access.WAY;
                 else
                     return EncodingManager.Access.CAN_SKIP;
             if (intendedValues.contains(firstValue))
@@ -243,7 +246,10 @@ public class CarFlagEncoder extends AbstractFlagEncoder {
             return EncodingManager.Access.CAN_SKIP;
 
         if (getConditionalTagInspector().isPermittedWayConditionallyRestricted(way))
-            return EncodingManager.Access.CONDITIONAL;
+            if (getConditionalTagInspector().isConditionLazyEvaluated())
+                return EncodingManager.Access.CONDITIONAL;
+            else
+                return EncodingManager.Access.CAN_SKIP;
         else
             return EncodingManager.Access.WAY;
     }

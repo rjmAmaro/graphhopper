@@ -19,6 +19,7 @@ package com.graphhopper.routing.util;
 
 import com.graphhopper.reader.*;
 import com.graphhopper.reader.osm.conditional.ConditionalOSMTagInspector;
+import com.graphhopper.reader.osm.conditional.ConditionalParser;
 import com.graphhopper.reader.osm.conditional.DateRangeParser;
 import com.graphhopper.routing.profiles.*;
 import com.graphhopper.routing.weighting.TurnWeighting;
@@ -112,7 +113,9 @@ public abstract class AbstractFlagEncoder implements FlagEncoder {
     // should be called as last method in constructor, move out of the flag encoder somehow
     protected void init() {
         // we should move 'OSM to object' logic into the DataReader like OSMReader, but this is a major task as we need to convert OSM format into kind of a standard/generic format
-        conditionalTagInspector = new ConditionalOSMTagInspector(DateRangeParser.createCalendar(), restrictions, restrictedValues, intendedValues);
+        ConditionalOSMTagInspector conditionalTagInspector = new ConditionalOSMTagInspector(restrictions, restrictedValues, intendedValues);
+        conditionalTagInspector.addValueParser(ConditionalParser.createDateTimeParser());
+        this.conditionalTagInspector = conditionalTagInspector;
     }
 
     @Override
