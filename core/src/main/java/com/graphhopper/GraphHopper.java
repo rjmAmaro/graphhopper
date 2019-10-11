@@ -852,11 +852,13 @@ public class GraphHopper implements GraphHopperAPI {
             String name = encodingManager.getKey(encoder, "conditional_access");
             if (encodingManager.hasEncodedValue(name)) {
                 BooleanEncodedValue conditionalEnc = encodingManager.getBooleanEncodedValue(name);
-
+                TimeDependentEdgeFilter edgeFilter = new ConditionalAccessEdgeFilter(conditionalEnc, true, true);
                 AllEdgesIterator edges = ghStorage.getAllEdges();
+
+                long time = Calendar.getInstance().getTimeInMillis();
+
                 while (edges.next())
-                    if (edges.get(conditionalEnc))
-                        System.out.println(edges.getEdge() + ": " + edges.getConditional());
+                    edgeFilter.accept(edges, time);
             }
         }
 

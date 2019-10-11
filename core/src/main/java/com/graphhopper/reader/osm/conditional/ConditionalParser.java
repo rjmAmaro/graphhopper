@@ -183,7 +183,7 @@ public class ConditionalParser {
             return false;
 
         ArrayList<Restriction> parsedRestrictions = new ArrayList<>();
-        unevaluatedRestrictions = new String();
+        //unevaluatedRestrictions = new String();
 
         try {
             ConditionalRestrictionParser parser = new ConditionalRestrictionParser(new ByteArrayInputStream(tagValue.getBytes()));
