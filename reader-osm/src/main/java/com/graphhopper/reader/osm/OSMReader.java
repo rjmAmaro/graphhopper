@@ -412,20 +412,6 @@ public class OSMReader implements DataReader {
             encodingManager.applyWayTags(way, edge);
         }
 
-        if (acceptWay.hasConditional()) {
-            // iterate over encoders to fetch conditional values
-            // CAUTION: currently only car flag encoder supports conditionals!
-            for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
-                if (acceptWay.getAccess(encoder.toString()).isConditional()) {
-                    String value = ((AbstractFlagEncoder) encoder).getConditionalTagInspector().getTagValue();
-
-                    for (EdgeIteratorState edge : createdEdges)
-                        edge.setConditional(value);
-                }
-
-            }
-
-        }
     }
 
     public void processRelation(ReaderRelation relation) {
