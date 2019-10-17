@@ -1040,6 +1040,7 @@ public class OSMReader implements DataReader {
     public LongIntMap getNodeMap() {
         return osmNodeIdToInternalNodeMap;
     }
+    // ORS-GHEND
 
     protected LongLongMap getNodeFlagsMap() {
         return osmNodeIdToNodeFlagsMap;
