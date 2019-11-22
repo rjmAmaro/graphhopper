@@ -25,7 +25,6 @@ import com.graphhopper.routing.profiles.EncodedValue;
 import com.graphhopper.routing.profiles.SimpleBooleanEncodedValue;
 import com.graphhopper.routing.profiles.UnsignedDecimalEncodedValue;
 import com.graphhopper.storage.IntsRef;
-import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.Helper;
 import com.graphhopper.util.PMap;
 
@@ -308,12 +307,6 @@ public class CarFlagEncoder extends AbstractFlagEncoder {
             }
         }
         return edgeFlags;
-    }
-
-    @Override
-    public void applyWayTags(ReaderWay way, EdgeIteratorState edge) {
-        if (edge.get(conditionalEncoder))
-            edge.setConditional(getConditionalTagInspector().getTagValue());
     }
 
     public final BooleanEncodedValue getConditionalEnc() {

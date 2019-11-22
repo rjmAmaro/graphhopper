@@ -412,6 +412,20 @@ public class OSMReader implements DataReader {
             encodingManager.applyWayTags(way, edge);
         }
 
+        // store conditionals
+        storeConditionalAccess(acceptWay, createdEdges);
+    }
+
+    protected void storeConditionalAccess(EncodingManager.AcceptWay acceptWay, List<EdgeIteratorState> createdEdges) {
+        if (acceptWay.hasConditional()) {
+            for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
+                String encoderName = encoder.toString();
+                if (acceptWay.getAccess(encoderName) == EncodingManager.Access.CONDITIONAL) {
+                    String value = ((AbstractFlagEncoder) encoder).getConditionalTagInspector().getTagValue();
+                    ((GraphHopperStorage) ghStorage).getConditionalEdges(encoderName).addEdges(createdEdges, value);
+                }
+            }
+        }
     }
 
     public void processRelation(ReaderRelation relation) {
