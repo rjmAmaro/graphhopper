@@ -81,6 +81,7 @@ public abstract class AbstractFlagEncoder implements FlagEncoder {
     protected static final double LONG_TRIP_FERRY_SPEED = 30;
 
     private ConditionalTagInspector conditionalTagInspector;
+    private ConditionalSpeedInspector conditionalSpeedInspector;
 
     public AbstractFlagEncoder(PMap properties) {
         throw new RuntimeException("This method must be overridden in derived classes");
@@ -148,6 +149,14 @@ public abstract class AbstractFlagEncoder implements FlagEncoder {
 
     protected void setConditionalTagInspector(ConditionalTagInspector conditionalTagInspector) {
         this.conditionalTagInspector = conditionalTagInspector;
+    }
+
+    public ConditionalSpeedInspector getConditionalSpeedInspector() {
+        return conditionalSpeedInspector;
+    }
+
+    protected void setConditionalSpeedInspector(ConditionalSpeedInspector conditionalSpeedInspector) {
+        this.conditionalSpeedInspector = conditionalSpeedInspector;
     }
 
     /**
