@@ -37,6 +37,10 @@ public class Parameters {
          */
         public static final String DIJKSTRA = "dijkstra";
         /**
+         * Unidirectional Time-dependent Dijkstra
+         */
+        public static final String TD_DIJKSTRA = "td_dijkstra";
+        /**
          * one to many Dijkstra (not yet for edge based #394, not yet for CH)
          */
         public static final String DIJKSTRA_ONE_TO_MANY = "dijkstra_one_to_many";
