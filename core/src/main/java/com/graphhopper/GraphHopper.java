@@ -967,53 +967,47 @@ public class GraphHopper implements GraphHopperAPI {
      * created. Note that all URL parameters are available in the hintsMap as String if
      * you use the web module.
      *
-     * @param hints all parameters influencing the weighting. E.g. parameters coming via
+     * @param hintsMap all parameters influencing the weighting. E.g. parameters coming via
      *                 GHRequest.getHints or directly via "&amp;api.xy=" from the URL of the web UI
      * @param encoder  the required vehicle
      * @param graph    The Graph enables the Weighting for NodeAccess and more
      * @return the weighting to be used for route calculation
      * @see HintsMap
      */
-    public Weighting createWeighting(HintsMap hints, FlagEncoder encoder, Graph graph) {
-// ORS-GH MOD START
-        TraversalMode tMode = encoder.supports(TurnWeighting.class) ? TraversalMode.EDGE_BASED : TraversalMode.NODE_BASED;
-        if (hints.has(Routing.EDGE_BASED))
-            tMode = hints.getBool(Routing.EDGE_BASED, false) ? TraversalMode.EDGE_BASED : TraversalMode.NODE_BASED;
-
-        if (tMode.isEdgeBased() && !encoder.supports(TurnWeighting.class)) {
-            throw new IllegalArgumentException("You need a turn cost extension to make use of edge_based=true, e.g. use car|turn_costs=true");
-        }
-        if (weightingFactory != null) {
-            return weightingFactory.createWeighting(hints, encoder, ghStorage);
-        }
-// ORS-GH MOD END
-        String weightingStr = toLowerCase(hints.getWeighting());
+    public Weighting createWeighting(HintsMap hintsMap, FlagEncoder encoder, Graph graph) {
+        String weightingStr = toLowerCase(hintsMap.getWeighting());
         Weighting weighting = null;
 
         if (encoder.supports(GenericWeighting.class)) {
-            weighting = new GenericWeighting((DataFlagEncoder) encoder, hints);
+            weighting = new GenericWeighting((DataFlagEncoder) encoder, hintsMap);
         } else if ("shortest".equalsIgnoreCase(weightingStr)) {
             weighting = new ShortestWeighting(encoder);
         } else if ("fastest".equalsIgnoreCase(weightingStr) || weightingStr.isEmpty()) {
             if (encoder.supports(PriorityWeighting.class))
-                weighting = new PriorityWeighting(encoder, hints);
+                weighting = new PriorityWeighting(encoder, hintsMap);
             else
-                weighting = new FastestWeighting(encoder, hints);
+                weighting = new FastestWeighting(encoder, hintsMap);
         } else if ("curvature".equalsIgnoreCase(weightingStr)) {
             if (encoder.supports(CurvatureWeighting.class))
-                weighting = new CurvatureWeighting(encoder, hints);
+                weighting = new CurvatureWeighting(encoder, hintsMap);
 
         } else if ("short_fastest".equalsIgnoreCase(weightingStr)) {
-            weighting = new ShortFastestWeighting(encoder, hints);
+            weighting = new ShortFastestWeighting(encoder, hintsMap);
         }
+
+        // ORS-GH MOD START
+        if (weightingFactory != null) {
+            weighting = weightingFactory.enrichDefaultGHWeighting(weighting, hintsMap, encoder, ghStorage);
+        }
+        // ORS-GH MOD END
 
         if (weighting == null)
             throw new IllegalArgumentException("weighting " + weightingStr + " not supported");
 
-        if (hints.has(Routing.BLOCK_AREA)) {
-            String blockAreaStr = hints.get(Parameters.Routing.BLOCK_AREA, "");
+        if (hintsMap.has(Routing.BLOCK_AREA)) {
+            String blockAreaStr = hintsMap.get(Parameters.Routing.BLOCK_AREA, "");
             GraphEdgeIdFinder.BlockArea blockArea = new GraphEdgeIdFinder(graph, locationIndex).
-                    parseBlockArea(blockAreaStr, DefaultEdgeFilter.allEdges(encoder), hints.getDouble("block_area.edge_id_max_area", 1000 * 1000));
+                    parseBlockArea(blockAreaStr, DefaultEdgeFilter.allEdges(encoder), hintsMap.getDouble("block_area.edge_id_max_area", 1000 * 1000));
             return new BlockAreaWeighting(weighting, blockArea);
         }
 
@@ -1024,17 +1018,9 @@ public class GraphHopper implements GraphHopperAPI {
      * Potentially wraps the specified weighting into a TurnWeighting instance.
      */
     public Weighting createTurnWeighting(Graph graph, Weighting weighting, TraversalMode tMode, double uTurnCosts) {
-        // ORS-GH MOD START
-        if (!(weighting instanceof TurnWeighting)) {
-            // ORS-GH MOD END
-            FlagEncoder encoder = weighting.getFlagEncoder();
-            if (encoder.supports(TurnWeighting.class) && tMode.isEdgeBased()) {
-                // ORS-GH MOD START
-                //return new TurnWeighting(weighting, (TurnCostExtension) graph.getExtension(), uTurnCosts);
-                return new TurnWeighting(weighting, HelperORS.getTurnCostExtensions(graph.getExtension()), uTurnCosts);
-                // ORS-GH MOD END
-            }
-        }
+        FlagEncoder encoder = weighting.getFlagEncoder();
+        if (encoder.supports(TurnWeighting.class) && tMode.isEdgeBased())
+            return new TurnWeighting(weighting, (TurnCostExtension) graph.getExtension(), uTurnCosts);
         return weighting;
     }
 

@@ -151,11 +151,7 @@ public class QueryGraph implements Graph {
         mainNodes = graph.getNodes();
         mainEdges = graph.getAllEdges().length();
 
-        // ORS-GH MOD START
-        // ORG CODE
-        //if (mainGraph.getExtension() instanceof TurnCostExtension) {
-        if (HelperORS.getTurnCostExtensions(mainGraph.getExtension()) != null)
-        // ORS-GH MOD END
+        if (mainGraph.getExtension() instanceof TurnCostExtension)
             wrappedExtension = new QueryGraphTurnExt();
         else
             wrappedExtension = mainGraph.getExtension();
@@ -768,12 +764,7 @@ public class QueryGraph implements Graph {
         private final TurnCostExtension mainTurnExtension;
 
         public QueryGraphTurnExt() {
-            // ORS-GH MOD START
-            // ORG CODE START
-            //this.mainTurnExtension = (TurnCostExtension) mainGraph.getExtension();
-            //ORG CODE END
-            this.mainTurnExtension = HelperORS.getTurnCostExtensions(mainGraph.getExtension());
-            // ORS-GH MOD END
+            this.mainTurnExtension = (TurnCostExtension) mainGraph.getExtension();
         }
 
         @Override
