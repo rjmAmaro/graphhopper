@@ -1025,9 +1025,31 @@ public class GraphHopper implements GraphHopperAPI {
     public Weighting createTurnWeighting(Graph graph, Weighting weighting, TraversalMode tMode, double uTurnCosts) {
         FlagEncoder encoder = weighting.getFlagEncoder();
         if (encoder.supports(TurnWeighting.class) && tMode.isEdgeBased())
-            return new TurnWeighting(weighting, (TurnCostExtension) graph.getExtension(), uTurnCosts);
+            // ORS-GH MOD START
+            // we need to extract from the 'graph.getExtension()' the TurnCostExtension! (cause ORS is supporting
+            // multiple Extentions!)
+            //return new TurnWeighting(weighting, (TurnCostExtension) graph.getExtension(), uTurnCosts);
+            return new TurnWeighting(weighting, getTurnCostExtensionsFromExtentionStorage(graph.getExtension()), uTurnCosts);
+            // ORS-GH MOD END
         return weighting;
     }
+
+    // ORS-GH MOD START (this is the EX HelperORS code...)
+    private TurnCostExtension getTurnCostExtensionsFromExtentionStorage(GraphExtension extendedStorage) {
+        if (extendedStorage instanceof TurnCostExtension) {
+            return (TurnCostExtension) extendedStorage;
+        } else if (extendedStorage instanceof ExtendedStorageSequence) {
+            ExtendedStorageSequence ess = (ExtendedStorageSequence) extendedStorage;
+            GraphExtension[] exts = ess.getExtensions();
+            for (int i = 0; i < exts.length; i++) {
+                if (exts[i] instanceof TurnCostExtension) {
+                    return (TurnCostExtension) exts[i];
+                }
+            }
+        }
+        return null;
+    }
+    // ORS-GH MOD END
 
     @Override
     public GHResponse route(GHRequest request) {
