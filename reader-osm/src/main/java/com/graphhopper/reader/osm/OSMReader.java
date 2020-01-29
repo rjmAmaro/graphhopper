@@ -499,7 +499,11 @@ public class OSMReader implements DataReader {
         if (relation.hasTag("type", "restriction")) {
             OSMTurnRelation turnRelation = createTurnRelation(relation);
             if (turnRelation != null) {
-                GraphExtension extendedStorage = graph.getExtension();
+                //ORS-GH MOD START
+                // ORG CODE
+                //GraphExtension extendedStorage = graph.getExtension();
+                GraphExtension extendedStorage = HelperORS.getTurnCostExtensionsFromExtentionStorage(graph.getExtension());
+                //ORS-GH MOD END
                 if (extendedStorage instanceof TurnCostExtension) {
                     TurnCostExtension tcs = (TurnCostExtension) extendedStorage;
                     Collection<TurnCostTableEntry> entries = analyzeTurnRelation(turnRelation);
