@@ -789,6 +789,11 @@ public class GraphHopper implements GraphHopperAPI {
 
         GHDirectory dir = new GHDirectory(ghLocation, dataAccessType);
         //ORS-GH MOD START
+        // MARQ24 the creation of the 'ghStorage' for ORS is slightly different since we want to add
+        // multiple/different 'GraphExtension' for the GraphHopperStorage - so the code inside the
+        // org.heigit.ors.routing.graphhopper.extensions.ORSGraphStorageFactory looks quite the same
+        // then the default GH implementation - but with every update of GH we have to check, if the
+        // storage creation will change (and then we should adopt the ors factory code as well!
         if (graphStorageFactory != null) {
             ghStorage = graphStorageFactory.createStorage(dir, this);
         }
