@@ -37,7 +37,7 @@ public class Parameters {
          */
         public static final String DIJKSTRA = "dijkstra";
         /**
-         * Unidirectional Time-dependent Dijkstra
+         * Unidirectional time-dependent Dijkstra
          */
         public static final String TD_DIJKSTRA = "td_dijkstra";
         /**
@@ -48,6 +48,10 @@ public class Parameters {
          * Unidirectional A* (not for CH)
          */
         public static final String ASTAR = "astar";
+        /**
+         * Unidirectional time-dependent A* (not for CH)
+         */
+        public static final String TD_ASTAR = "td_astar";
         /**
          * Bidirectional A*
          */
