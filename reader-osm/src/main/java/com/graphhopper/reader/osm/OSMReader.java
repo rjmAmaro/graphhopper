@@ -411,7 +411,7 @@ public class OSMReader implements DataReader {
 
         // store conditionals
         storeConditionalAccess(acceptWay, createdEdges);
-        storeConditionalSpeed(createdEdges);
+        storeConditionalSpeed(edgeFlags, createdEdges);
     }
 
     protected void storeConditionalAccess(EncodingManager.AcceptWay acceptWay, List<EdgeIteratorState> createdEdges) {
@@ -426,14 +426,17 @@ public class OSMReader implements DataReader {
         }
     }
 
-    protected void storeConditionalSpeed(List<EdgeIteratorState> createdEdges) {
+    protected void storeConditionalSpeed(IntsRef edgeFlags, List<EdgeIteratorState> createdEdges) {
         for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
-            ConditionalSpeedInspector conditionalSpeedInspector = ((AbstractFlagEncoder) encoder).getConditionalSpeedInspector();
+            String encoderName = encodingManager.getKey(encoder, "conditional_speed");
 
-            if (conditionalSpeedInspector != null && conditionalSpeedInspector.isConditionLazyEvaluated()) {
-                String value = conditionalSpeedInspector.getTagValue();
-                //System.out.println(value);
-                ((GraphHopperStorage) ghStorage).getConditionalSpeed(encoder).addEdges(createdEdges, value);
+            if (encodingManager.hasEncodedValue(encoderName) && encodingManager.getBooleanEncodedValue(encoderName).getBool(false, edgeFlags)) {
+                ConditionalSpeedInspector conditionalSpeedInspector = ((AbstractFlagEncoder) encoder).getConditionalSpeedInspector();
+
+                if (conditionalSpeedInspector.isConditionLazyEvaluated()) {
+                    String value = conditionalSpeedInspector.getTagValue();
+                    ((GraphHopperStorage) ghStorage).getConditionalSpeed(encoder).addEdges(createdEdges, value);
+                }
             }
         }
     }
