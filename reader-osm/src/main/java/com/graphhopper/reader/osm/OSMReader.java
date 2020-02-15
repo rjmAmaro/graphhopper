@@ -775,6 +775,12 @@ public class OSMReader implements DataReader {
                     if ((nodeFlags | 4) == 4) {
                         counters[1]++;
                     }
+
+                    // MARQ24 NOT 100% sure if we should DO this or NOT ?!
+                    // once we have added the info to ONE edge, then we can remove the info from the NodeFlagsMap
+                    // since in any other case we generate the traffic light penalty multiple times for just
+                    // pasing the same osm-Node
+                    //getNodeFlagsMap().put(osmNodeId, 0);
                 }
                 //ORS-GH MOD END
 
@@ -944,6 +950,8 @@ public class OSMReader implements DataReader {
             if (mask > 0) {
                 iter.setAdditionalField(mask);
             }
+            counters[0] = 0;
+            counters[1] = 0;
         }
         //ORS-GH MOD END
 
