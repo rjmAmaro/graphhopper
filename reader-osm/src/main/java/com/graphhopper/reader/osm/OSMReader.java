@@ -391,8 +391,20 @@ public class OSMReader implements DataReader {
             // barrier was spotted and the way is passable for that mode of travel
             if (nodeFlags > 0) {
                 if (isOnePassable(encodingManager.getAccessEncFromNodeFlags(nodeFlags), edgeFlags)) {
-                    // remove barrier to avoid duplicates
-                    getNodeFlagsMap().put(nodeId, 0);
+                    // ORS-GH MOD START
+                    // MARQ24: we need to check if there are more flags (then just the barrier info
+                    // stored for the given node id, and if YES, then we should not REMOVE the nodeId
+                    // from the 'NodeFlagsMap' (we should only remove the barrierFlag and then update
+                    // the map with the remaining flag values! - if there is just the barrier flag
+                    // stored we can use the original GH code and just remove the nodeId from the Map
+                    // right now I (marq24) will keep just the original code, cause I could not thing
+                    // of a situation where we have a encoded barrier, that is at the same time
+                    // a traffic light or crossing...
+                    //if(MightDo: CheckIfThereAreMoreFlagsThenJustTheIsBarreierInfo(nodeFlags)){
+                        // remove barrier to avoid duplicates
+                        getNodeFlagsMap().put(nodeId, 0);
+                    //}
+                    //ORS-GH MOD END
 
                     // create shadow node copy for zero length edge
                     long newNodeId = addBarrierNode(nodeId);
@@ -407,7 +419,6 @@ public class OSMReader implements DataReader {
                         partNodeIds.add(osmNodeIds.buffer, lastBarrier, length);
                         partNodeIds.set(length - 1, newNodeId);
                         createdEdges.addAll(addOSMWay(partNodeIds, edgeFlags, wayOsmId));
-
                         // create zero length edge for barrier
                         createdEdges.addAll(addBarrierEdge(newNodeId, nodeId, edgeFlags, nodeFlags, wayOsmId));
                     } else {
@@ -434,9 +445,11 @@ public class OSMReader implements DataReader {
             // ORS-GH MOD START - code injection point
             if (!onCreateEdges(way, osmNodeIds, edgeFlags, createdEdges)) {
             // ORS-GH MOD END
-            // no barriers - simply add the whole way
-            createdEdges.addAll(addOSMWay(way.getNodes(), edgeFlags, wayOsmId));
-        }
+                // no barriers - simply add the whole way
+                createdEdges.addAll(addOSMWay(way.getNodes(), edgeFlags, wayOsmId));
+            // ORS-GH MOD START
+            }
+            // ORS-GH MOD END
         }
 
         for (EdgeIteratorState edge : createdEdges) {
@@ -450,9 +463,14 @@ public class OSMReader implements DataReader {
         onProcessWay(way);
         // ORS-GH MOD END
         // ORS-GH MOD START - apply individual processing to each edge
+        // MARQ24 - is this really required to be run AFTER 'onProcessWay(way)' and
+        // 'applyNodeTagsToWay(way)'?
+        // If this is not the case, then stuffing the call 'onProcessEdge(way, edge);'
+        // into the for loop where encodingManager.applyWayTags(way. edge) is called
+        // save a complete loop!
         for (EdgeIteratorState edge : createdEdges) {
             onProcessEdge(way, edge);
-    }
+        }
         // ORS-GH MOD END
     }
 
@@ -737,8 +755,29 @@ public class OSMReader implements DataReader {
         int lastIndex = osmNodeIds.size() - 1;
         int lastInBoundsPillarNode = -1;
         try {
+            // ORS-GH MOD START
+            int counters[] = new int[]{0,0};
+            // ORS-GH MOD END
             for (int i = 0; i < osmNodeIds.size(); i++) {
                 long osmNodeId = osmNodeIds.get(i);
+                //ORS-GH MOD START
+                // here we need to read actually from the osmNodeFlag the additional count values...
+                long nodeFlags = getNodeFlagsMap().get(osmNodeId);
+                if(nodeFlags > 0) {
+                    // ORS-GH MOD START - counting additional items that will show down the vehicle while
+                    // passing the the edge...
+                    // YES EVIL QUICK HACK - we do not know here what flagBits are used for traffic lights
+                    // anc crossings... (these FlagBits will be set in
+                    // org.heigit.ors.routing.graphhopper.extensions.flagencoders.CarFlagEncoder.createEncodedValues())
+                    if ((nodeFlags | 2) == 2) {
+                        counters[0]++;
+                    }
+                    if ((nodeFlags | 4) == 4) {
+                        counters[1]++;
+                    }
+                }
+                //ORS-GH MOD END
+
                 int tmpNode = getNodeMap().get(osmNodeId);
                 if (tmpNode == EMPTY_NODE)
                     continue;
@@ -758,7 +797,10 @@ public class OSMReader implements DataReader {
                         tmpNode = -tmpNode - 3;
                         if (pointList.getSize() > 1 && firstNode >= 0) {
                             // TOWER node
-                            newEdges.add(addEdge(firstNode, tmpNode, pointList, flags, wayOsmId));
+                            // ORS-GH MOD START
+                            //newEdges.add(addEdge(firstNode, tmpNode, pointList, flags, wayOsmId));
+                            newEdges.add(addEdge(firstNode, tmpNode, pointList, flags, wayOsmId, counters));
+                            // ORS-GH MOD END
                             pointList.clear();
                             pointList.add(nodeAccess, tmpNode);
                         }
@@ -796,7 +838,10 @@ public class OSMReader implements DataReader {
                         }
 
                         int newEndNode = -handlePillarNode(lastGHNodeId, lastOsmNodeId, pointList, true) - 3;
-                        newEdges.add(addEdge(firstNode, newEndNode, pointList, flags, wayOsmId));
+                        // ORS-GH MOD START
+                        //newEdges.add(addEdge(firstNode, newEndNode, pointList, flags, wayOsmId));
+                        newEdges.add(addEdge(firstNode, newEndNode, pointList, flags, wayOsmId, counters));
+                        // ORS-GH MOD END
                         pointList.clear();
                         pointList.add(nodeAccess, newEndNode);
                         firstNode = newEndNode;
@@ -804,7 +849,10 @@ public class OSMReader implements DataReader {
 
                     pointList.add(nodeAccess, tmpNode);
                     if (firstNode >= 0) {
-                        newEdges.add(addEdge(firstNode, tmpNode, pointList, flags, wayOsmId));
+                        // ORS-GH MOD START
+                        //newEdges.add(addEdge(firstNode, tmpNode, pointList, flags, wayOsmId));
+                        newEdges.add(addEdge(firstNode, tmpNode, pointList, flags, wayOsmId, counters));
+                        // ORS-GH MOD END
                         pointList.clear();
                         pointList.add(nodeAccess, tmpNode);
                     }
@@ -818,8 +866,10 @@ public class OSMReader implements DataReader {
         }
         return newEdges;
     }
-
-    EdgeIteratorState addEdge(int fromIndex, int toIndex, PointList pointList, IntsRef flags, long wayOsmId) {
+    //ORS-GH MOD START
+    //EdgeIteratorState addEdge(int fromIndex, int toIndex, PointList pointList, IntsRef flags, long wayOsmId) {
+    EdgeIteratorState addEdge(int fromIndex, int toIndex, PointList pointList, IntsRef flags, long wayOsmId, int[] counters) {
+    //ORS-GH MOD END
         // sanity checks
         if (fromIndex < 0 || toIndex < 0)
             throw new AssertionError("to or from index is invalid for this edge " + fromIndex + "->" + toIndex + ", points:" + pointList);
@@ -886,6 +936,16 @@ public class OSMReader implements DataReader {
         }
 
         EdgeIteratorState iter = graph.edge(fromIndex, toIndex).setDistance(towerNodeDistance).setFlags(flags);
+        //ORS-GH MOD START - finally attaching the trafficlight & crossing count to the iter(egde)
+        if(counters != null && counters.length == 2 && iter.getAdditionalField() == -1) {
+            // I (marq24) do not want to overwrite any already existing additionalField values!!!
+            int mask = counters[0];
+            mask |= (counters[1] << 8);
+            if (mask > 0) {
+                iter.setAdditionalField(mask);
+            }
+        }
+        //ORS-GH MOD END
 
         if (nodes > 2) {
             if (doSimplify)
