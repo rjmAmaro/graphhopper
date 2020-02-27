@@ -135,6 +135,10 @@ public class Parameters {
          * a rectangle lat1,lon1,lat2,lon2
          */
         public static final String BLOCK_AREA = "block_area";
+        /**
+         * time-dependent routing requires compatible algorithm and weighting
+         */
+        public static final String TIME_DEPENDENT = "time_dependent";
     }
 
     /**
