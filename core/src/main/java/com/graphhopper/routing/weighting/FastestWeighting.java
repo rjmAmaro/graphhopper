@@ -36,9 +36,9 @@ public class FastestWeighting extends AbstractWeighting {
      * costs or traffic light costs etc)
      */
     protected final static double SPEED_CONV = 3.6;
-    private final double headingPenalty;
-    private final long headingPenaltyMillis;
-    private final double maxSpeed;
+    protected final double headingPenalty;
+    protected final long headingPenaltyMillis;
+    protected final double maxSpeed;
 
     public FastestWeighting(FlagEncoder encoder, PMap map) {
         super(encoder);

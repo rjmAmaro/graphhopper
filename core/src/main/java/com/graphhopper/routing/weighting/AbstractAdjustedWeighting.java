@@ -19,6 +19,7 @@ package com.graphhopper.routing.weighting;
 
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.HintsMap;
+import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.util.EdgeIteratorState;
 
 /**
@@ -72,5 +73,10 @@ public abstract class AbstractAdjustedWeighting implements Weighting {
     @Override
     public boolean isTimeDependent() {
         return superWeighting.isTimeDependent();
+    }
+
+    @Override
+    public void init(GraphHopperStorage storage) {
+        superWeighting.init(storage);
     }
 }
