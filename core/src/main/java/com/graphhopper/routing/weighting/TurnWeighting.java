@@ -21,6 +21,7 @@ import com.graphhopper.routing.EdgeIteratorStateHelper;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.HintsMap;
 import com.graphhopper.routing.util.TurnCostEncoder;
+import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.storage.TurnCostExtension;
 import com.graphhopper.util.EdgeIterator;
 import com.graphhopper.util.EdgeIteratorState;
@@ -177,5 +178,10 @@ public class TurnWeighting implements Weighting {
     @Override
     public boolean isTimeDependent() {
         return superWeighting.isTimeDependent();
+    }
+
+    @Override
+    public void init(GraphHopperStorage storage) {
+        superWeighting.init(storage);
     }
 }

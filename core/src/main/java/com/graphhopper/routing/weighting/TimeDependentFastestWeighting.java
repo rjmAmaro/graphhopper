@@ -31,39 +31,32 @@ import com.graphhopper.util.Parameters.Routing;
  *
  * @author Peter Karich
  */
-public class TimeDependentFastestWeighting extends AbstractWeighting {
-    /**
-     * Converting to seconds is not necessary but makes adding other penalties easier (e.g. turn
-     * costs or traffic light costs etc)
-     */
-    protected final static double SPEED_CONV = 3.6;
-    private final double headingPenalty;
-    private final double maxSpeed;
-
-    private final SpeedCalculator speedCalculator;
-
+public class TimeDependentFastestWeighting extends FastestWeighting {
+    private SpeedCalculator speedCalculator;
 
     public TimeDependentFastestWeighting(FlagEncoder encoder, PMap map, GraphHopperStorage graph) {
-        super(encoder);
-        headingPenalty = map.getDouble(Routing.HEADING_PENALTY, Routing.DEFAULT_HEADING_PENALTY);
-        maxSpeed = encoder.getMaxSpeed() / SPEED_CONV;
+        super(encoder, map);
 
-        this.speedCalculator = new SpeedCalculator(graph, encoder);
+        if (graph != null)
+            init(graph);
     }
 
     @Override
-    public double getMinWeight(double distance) {
-        return distance / maxSpeed;
+    public void init(GraphHopperStorage graph) {
+        this.speedCalculator = new SpeedCalculator(graph, this.flagEncoder);
     }
 
     @Override
     public double calcWeight(EdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId) {
-        return this.calcWeight(edge, reverse, prevOrNextEdgeId, -1);
+        return calcWeight(edge, speedCalculator.getMaxSpeed(edge, reverse));
     }
 
     @Override
     public double calcWeight(EdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId, long at) {
-        double speed = speedCalculator.getSpeed(edge, reverse, at);
+        return calcWeight(edge, speedCalculator.getSpeed(edge, reverse, at));
+    }
+
+    private double calcWeight(EdgeIteratorState edge, double speed) {
         if (speed == 0)
             return Double.POSITIVE_INFINITY;
 

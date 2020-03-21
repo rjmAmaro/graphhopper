@@ -21,6 +21,7 @@ import com.graphhopper.routing.profiles.BooleanEncodedValue;
 import com.graphhopper.routing.profiles.DecimalEncodedValue;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.HintsMap;
+import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.util.EdgeIteratorState;
 
 import static com.graphhopper.util.Helper.toLowerCase;
@@ -127,4 +128,7 @@ public abstract class AbstractWeighting implements Weighting {
     public boolean isTimeDependent() {
         return false;
     }
+
+    @Override
+    public void init(GraphHopperStorage storage) {};
 }
