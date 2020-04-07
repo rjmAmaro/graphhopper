@@ -1072,7 +1072,7 @@ public class GraphHopper implements GraphHopperAPI {
             new TimeDependentAccessWeighting(weighting, ghStorage, weighting.getFlagEncoder()) : weighting;
     }
 
-    private boolean isAlgorithmTimeDependent(String algo) {
+    protected boolean isAlgorithmTimeDependent(String algo) {
         return ("td_dijkstra".equals(algo) || "td_astar".equals(algo)) ? true : false;
     }
 

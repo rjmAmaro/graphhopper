@@ -100,4 +100,7 @@ public interface CHGraph extends Graph {
      */
     boolean isReadyForContraction();
 
+    // ORS-GH MOD START - CALT
+    int shortcutCore(int a, int b, int accessFlags, double weight, int skippedEdge1, int skippedEdge2, long time);
+    // ORS-GH MOD END
 }
