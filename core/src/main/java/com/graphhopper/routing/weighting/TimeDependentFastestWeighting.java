@@ -48,7 +48,7 @@ public class TimeDependentFastestWeighting extends FastestWeighting {
 
     @Override
     public double calcWeight(EdgeIteratorState edge, boolean reverse, int prevOrNextEdgeId) {
-        return calcWeight(edge, speedCalculator.getMaxSpeed(edge, reverse));
+        return super.calcWeight(edge, reverse, prevOrNextEdgeId); //calcWeight(edge, speedCalculator.getMaxSpeed(edge, reverse));
     }
 
     @Override
