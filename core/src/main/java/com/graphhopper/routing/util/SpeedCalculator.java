@@ -66,7 +66,7 @@ public class SpeedCalculator {
             } catch (ch.poole.conditionalrestrictionparser.ParseException e) {}
         }
 
-        return baseSpeed > timeDependentMaxSpeed ? baseSpeed : timeDependentMaxSpeed;
+        return (baseSpeed > timeDependentMaxSpeed) ? baseSpeed : timeDependentMaxSpeed;
     }
 
     public double getSpeed(EdgeIteratorState edge, boolean reverse, long time) {
