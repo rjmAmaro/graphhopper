@@ -1,8 +1,8 @@
 package com.graphhopper.routing.util;
 
-import ch.poole.conditionalrestrictionparser.Condition;
-import ch.poole.conditionalrestrictionparser.ConditionalRestrictionParser;
-import ch.poole.conditionalrestrictionparser.Restriction;
+import com.graphhopper.reader.osm.conditional.TimeDependentRestrictionParser;
+import com.graphhopper.reader.osm.conditional.ParsedCondition;
+import com.graphhopper.reader.osm.conditional.ParsedRestriction;
 import com.graphhopper.routing.EdgeKeys;
 import com.graphhopper.routing.profiles.BooleanEncodedValue;
 import com.graphhopper.util.DateTimeHelper;
@@ -10,9 +10,7 @@ import com.graphhopper.storage.ConditionalEdgesMap;
 import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.util.EdgeIteratorState;
 
-import java.io.ByteArrayInputStream;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -22,6 +20,7 @@ public class ConditionalAccessEdgeFilter implements TimeDependentEdgeFilter {
     private final boolean fwd;
     private final boolean bwd;
     private final DateTimeHelper dateTimeHelper;
+    private final TimeDependentRestrictionParser timeDependentRestrictionParser = new TimeDependentRestrictionParser();
 
     public ConditionalAccessEdgeFilter(GraphHopperStorage graph, FlagEncoder encoder) {
         this(graph, encoder.toString());
@@ -55,29 +54,24 @@ public class ConditionalAccessEdgeFilter implements TimeDependentEdgeFilter {
     boolean accept(String conditional, ZonedDateTime zonedDateTime) {
         boolean matchValue = false;
 
-        try {
-            ConditionalRestrictionParser crparser = new ConditionalRestrictionParser(new ByteArrayInputStream(conditional.getBytes()));
+        List<ParsedRestriction> restrictions = timeDependentRestrictionParser.parse(conditional);
 
-            ArrayList<Restriction> restrictions = crparser.restrictions();
-
+        if (restrictions!=null) {
             // iterate over restrictions starting from the last one in order to match to the most specific one
-            for (int i = restrictions.size() - 1 ; i >= 0; i--) {
-                Restriction restriction = restrictions.get(i);
+            for (int i = restrictions.size() - 1; i >= 0; i--) {
+                ParsedRestriction restriction = restrictions.get(i);
 
                 matchValue = "yes".equals(restriction.getValue());
 
-                List<Condition> conditions = restriction.getConditions();
+                List<ParsedCondition> conditions = restriction.getConditions();
 
                 // stop as soon as time matches the combined conditions
-                if (TimeDependentConditionalEvaluator.match(conditions, zonedDateTime))
+                if (TimeDependentConditionEvaluator.match(conditions, zonedDateTime))
                     return matchValue;
             }
 
             // no restrictions with matching conditions found
             return !matchValue;
-
-        } catch (ch.poole.conditionalrestrictionparser.ParseException e) {
-            //nop
         }
 
         return false;

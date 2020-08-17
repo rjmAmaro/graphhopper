@@ -69,7 +69,7 @@ public class TimeDependentAccessWeighting extends AbstractAdjustedWeighting {
 
     @Override
     public String getName() {
-        return superWeighting.getName();
+        return "td_access" + "|" + superWeighting.getName();
     }
 
     @Override

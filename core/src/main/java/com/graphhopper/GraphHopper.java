@@ -963,9 +963,8 @@ public class GraphHopper implements GraphHopperAPI {
     /**
      * Potentially wraps the specified weighting into a TimeDependentAccessWeighting.
      */
-    public Weighting createTimeDependentAccessWeighting(Weighting weighting, TraversalMode tMode, String algo) {
-        return tMode.isEdgeBased() && isAlgorithmTimeDependent(algo) ?
-            new TimeDependentAccessWeighting(weighting, ghStorage, weighting.getFlagEncoder()) : weighting;
+    public Weighting createTimeDependentAccessWeighting(Weighting weighting, String algo) {
+        return isAlgorithmTimeDependent(algo) ? new TimeDependentAccessWeighting(weighting, ghStorage, weighting.getFlagEncoder()) : weighting;
     }
 
     private boolean isAlgorithmTimeDependent(String algo) {
@@ -1085,7 +1084,7 @@ public class GraphHopper implements GraphHopperAPI {
                 if (maxVisitedNodesForRequest > maxVisitedNodes)
                     throw new IllegalArgumentException("The max_visited_nodes parameter has to be below or equal to:" + maxVisitedNodes);
 
-                weighting = createTimeDependentAccessWeighting(weighting, tMode, algoStr);
+                weighting = createTimeDependentAccessWeighting(weighting, algoStr);
 
                 int uTurnCostInt = request.getHints().getInt(Routing.U_TURN_COSTS, INFINITE_U_TURN_COSTS);
                 if (uTurnCostInt != INFINITE_U_TURN_COSTS && !tMode.isEdgeBased()) {

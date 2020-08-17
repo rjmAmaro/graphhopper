@@ -1,7 +1,7 @@
 package com.graphhopper.routing.util;
 
-import ch.poole.conditionalrestrictionparser.ConditionalRestrictionParser;
-import ch.poole.conditionalrestrictionparser.Restriction;
+import com.graphhopper.reader.osm.conditional.TimeDependentRestrictionParser;
+import com.graphhopper.reader.osm.conditional.ParsedRestriction;
 import com.graphhopper.routing.EdgeKeys;
 import com.graphhopper.routing.profiles.BooleanEncodedValue;
 import com.graphhopper.routing.profiles.DecimalEncodedValue;
@@ -10,9 +10,8 @@ import com.graphhopper.storage.ConditionalEdgesMap;
 import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.util.EdgeIteratorState;
 
-import java.io.ByteArrayInputStream;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
+import java.util.List;
 
 public class SpeedCalculator {
     protected final DecimalEncodedValue avSpeedEnc;
@@ -23,6 +22,7 @@ public class SpeedCalculator {
     private final BooleanEncodedValue conditionalEnc;
     private final ConditionalEdgesMap conditionalEdges;
     private final DateTimeHelper dateTimeHelper;
+    private final TimeDependentRestrictionParser timeDependentRestrictionParser = new TimeDependentRestrictionParser();
 
     public SpeedCalculator(GraphHopperStorage graph, FlagEncoder encoder) {
         avSpeedEnc = encoder.getAverageSpeedEnc();
@@ -53,17 +53,17 @@ public class SpeedCalculator {
         if (edge.get(conditionalEnc)) {
             int edgeId = EdgeKeys.getOriginalEdge(edge);
             String conditional = conditionalEdges.getValue(edgeId);
-            try {
-                ConditionalRestrictionParser crparser = new ConditionalRestrictionParser(new ByteArrayInputStream(conditional.getBytes()));
-                ArrayList<Restriction> restrictions = crparser.restrictions();
 
+            List<ParsedRestriction> restrictions = timeDependentRestrictionParser.parse(conditional);
+
+            if (restrictions!=null) {
                 // iterate over restrictions starting from the last one in order to match to the most specific one
-                for (int i = restrictions.size() - 1 ; i >= 0; i--) {
+                for (int i = restrictions.size() - 1; i >= 0; i--) {
                     double value = AbstractFlagEncoder.parseSpeed(restrictions.get(i).getValue()) * SPEED_FACTOR;
                     if (value > timeDependentMaxSpeed)
                         timeDependentMaxSpeed = value;
                 }
-            } catch (ch.poole.conditionalrestrictionparser.ParseException e) {}
+            }
         }
 
         return baseSpeed > timeDependentMaxSpeed ? baseSpeed : timeDependentMaxSpeed;
@@ -86,21 +86,19 @@ public class SpeedCalculator {
     }
 
     private double getSpeed(String conditional, ZonedDateTime zonedDateTime)  {
-        try {
-            ConditionalRestrictionParser crparser = new ConditionalRestrictionParser(new ByteArrayInputStream(conditional.getBytes()));
-            ArrayList<Restriction> restrictions = crparser.restrictions();
+        List<ParsedRestriction> restrictions = timeDependentRestrictionParser.parse(conditional);
 
+        if (restrictions!=null) {
             // iterate over restrictions starting from the last one in order to match to the most specific one
-            for (int i = restrictions.size() - 1 ; i >= 0; i--) {
-                Restriction restriction = restrictions.get(i);
+            for (int i = restrictions.size() - 1; i >= 0; i--) {
+                ParsedRestriction restriction = restrictions.get(i);
                 // stop as soon as time matches the combined conditions
-                if (TimeDependentConditionalEvaluator.match(restriction.getConditions(), zonedDateTime)) {
+                if (TimeDependentConditionEvaluator.match(restriction.getConditions(), zonedDateTime)) {
                     return AbstractFlagEncoder.parseSpeed(restriction.getValue());
                 }
             }
-        } catch (ch.poole.conditionalrestrictionparser.ParseException e) {
-            //nop
         }
+
         return -1;
     }
 
