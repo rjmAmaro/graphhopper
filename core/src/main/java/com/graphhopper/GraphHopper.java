@@ -850,8 +850,6 @@ public class GraphHopper implements GraphHopperAPI {
             interpolateBridgesAndOrTunnels();
         }
 
-        BBox bb = ghStorage.getBounds();
-        ghStorage.setTimeZoneMap(TimeZoneMap.forRegion(bb.minLat, bb.minLon, bb.maxLat, bb.maxLon));
 
         // FIXME: print out debug info on stored conditionals
         for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
@@ -869,6 +867,8 @@ public class GraphHopper implements GraphHopperAPI {
                 cs.printStoredValues();
             }
         }
+
+        initTimeZoneStorage();
 
         initLocationIndex();
 
@@ -1213,6 +1213,28 @@ public class GraphHopper implements GraphHopperAPI {
             throw new IllegalStateException("Cannot initialize locationIndex twice!");
 
         locationIndex = createLocationIndex(ghStorage.getDirectory());
+    }
+
+    /**
+     * Resolves node time zones
+     */
+    protected void initTimeZoneStorage() {
+        TimeZoneStorage timeZoneStorage = ghStorage.getTimeZoneStorage();
+
+        if (timeZoneStorage.entries()==0) {
+            BBox bb = ghStorage.getBounds();
+            TimeZoneMap timeZoneMap = TimeZoneMap.forRegion(bb.minLat, bb.minLon, bb.maxLat, bb.maxLon);
+            //ghStorage.setTimeZoneMap(timeZoneMap);
+
+            // calculate time zones for all nodes
+            NodeAccess nodeAccess = ghStorage.getNodeAccess();
+            for (int nodeId = 0; nodeId < ghStorage.getNodes(); nodeId++) {
+                double lat = nodeAccess.getLatitude(nodeId);
+                double lon = nodeAccess.getLongitude(nodeId);
+                String timeZoneId = timeZoneMap.getOverlappingTimeZone(lat, lon).get().getZoneId();
+                ghStorage.getTimeZoneStorage().setValue(nodeId, timeZoneId);
+            }
+        }
     }
 
     private boolean isCHPrepared() {

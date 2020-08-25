@@ -7,17 +7,24 @@ import java.util.Map;
 
 public class ConditionalIndex extends NameIndex {
     Map<String, Long> values = new HashMap<>();
+    String cachedName = new String();
+    Long cachedIndex;
 
     @Override
     public long put(String name) {
-        Long index = values.get(name);
+        // microoptimization to minimize the number of hashmap queries
+        if (cachedName.equals(name))
+            return cachedIndex;
 
-        if (index == null) {
-            index = super.put(name);
-            values.put(name, index);
+        cachedName = name;
+        cachedIndex = values.get(name);
+
+        if (cachedIndex == null) {
+            cachedIndex = super.put(name);
+            values.put(name, cachedIndex);
         }
 
-        return index;
+        return cachedIndex;
     }
 
     public ConditionalIndex(Directory dir, String filename) {

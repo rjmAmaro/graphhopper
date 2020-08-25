@@ -18,10 +18,7 @@
 package com.graphhopper.routing.util;
 
 import com.graphhopper.reader.ReaderWay;
-import com.graphhopper.storage.GraphBuilder;
-import com.graphhopper.storage.GraphHopperStorage;
-import com.graphhopper.storage.IntsRef;
-import com.graphhopper.storage.NodeAccess;
+import com.graphhopper.storage.*;
 import com.graphhopper.util.EdgeIteratorState;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,11 +41,13 @@ public class ConditionalAccessEdgeFilterTest {
     private final GraphHopperStorage graph = new GraphBuilder(encodingManager).create();
     private final TimeDependentEdgeFilter filter = new ConditionalAccessEdgeFilter(graph, encoder);
     private final NodeAccess nodeAccess = graph.getNodeAccess();
+    private final TimeZoneStorage timeZoneStorage = graph.getTimeZoneStorage();
 
     public ConditionalAccessEdgeFilterTest() {
         nodeAccess.setNode(0, 52, 13);
         nodeAccess.setNode(1, 53, 14);
-        graph.setTimeZoneMap(timeZoneMap);
+        for (int i = 0; i < graph.getNodes(); i++)
+            timeZoneStorage.setValue(i, "Europe/Berlin");
     }
 
     private EdgeIteratorState createConditionalEdge(boolean closed, String conditional) {

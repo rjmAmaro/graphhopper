@@ -25,7 +25,6 @@ import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.EdgeExplorer;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.shapes.BBox;
-import us.dustinj.timezonemap.TimeZoneMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,6 +49,7 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
     private final ConditionalEdges conditionalAccess;
     private final ConditionalEdges conditionalSpeed;
+    private final TimeZoneStorage timeZoneStorage;
 
     public ConditionalEdgesMap getConditionalAccess(FlagEncoder encoder) {
         return getConditionalAccess(encoder.toString());
@@ -67,15 +67,8 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
         return conditionalSpeed.getConditionalEdgesMap(encoderName);
     }
 
-    // FIXME: temporal solution until an external storage for time zones is introduced.
-    private TimeZoneMap timeZoneMap;
-
-    public TimeZoneMap getTimeZoneMap() {
-        return timeZoneMap;
-    }
-
-    public void setTimeZoneMap(TimeZoneMap timeZoneMap) {
-        this.timeZoneMap = timeZoneMap;
+    public TimeZoneStorage getTimeZoneStorage() {
+        return timeZoneStorage;
     }
 
     // same flush order etc
@@ -126,6 +119,9 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
         this.conditionalSpeed = new ConditionalEdges(encodingManager, "conditional_speed");
         this.conditionalSpeed.init(this, dir);
+
+        this.timeZoneStorage = new TimeZoneStorage();
+        this.timeZoneStorage.init(this, dir);
     }
 
     public CHGraph getCHGraph() {
@@ -201,6 +197,7 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
         conditionalAccess.setSegmentSize(bytes);
         conditionalSpeed.setSegmentSize(bytes);
+        timeZoneStorage.setSegmentSize(bytes);
     }
 
     /**
@@ -234,6 +231,7 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
         conditionalAccess.create(initSize);
         conditionalSpeed.create(initSize);
+        timeZoneStorage.create(initSize);
         return this;
     }
 
@@ -321,6 +319,7 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
             conditionalAccess.loadExisting();
             conditionalSpeed.loadExisting();
+            timeZoneStorage.loadExisting();
 
             return true;
         }
@@ -375,6 +374,7 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
         properties.flush();
         conditionalAccess.flush();
         conditionalSpeed.flush();
+        timeZoneStorage.flush();
     }
 
     @Override
@@ -388,6 +388,7 @@ public final class GraphHopperStorage implements GraphStorage, Graph {
 
         conditionalAccess.close();
         conditionalSpeed.close();
+        timeZoneStorage.close();
     }
 
     @Override
