@@ -66,6 +66,7 @@ import static com.graphhopper.util.Helper.nf;
  * <p>
  *
  * @author Peter Karich
+ * @author Andrzej Oles
  */
 public class OSMReader implements DataReader {
     protected static final int EMPTY_NODE = -1;
