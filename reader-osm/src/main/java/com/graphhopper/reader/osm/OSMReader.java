@@ -25,6 +25,7 @@ import com.graphhopper.reader.dem.ElevationProvider;
 import com.graphhopper.reader.dem.GraphElevationSmoothing;
 import com.graphhopper.reader.osm.OSMTurnRelation.TurnCostTableEntry;
 import com.graphhopper.routing.profiles.BooleanEncodedValue;
+import com.graphhopper.routing.util.AbstractFlagEncoder;
 import com.graphhopper.routing.util.DefaultEdgeFilter;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.util.FlagEncoder;
@@ -65,6 +66,7 @@ import static com.graphhopper.util.Helper.nf;
  * <p>
  *
  * @author Peter Karich
+ * @author Andrzej Oles
  */
 public class OSMReader implements DataReader {
     protected static final int EMPTY_NODE = -1;
@@ -452,9 +454,39 @@ public class OSMReader implements DataReader {
         // ORS-GH MOD START - apply individual processing to each edge
         for (EdgeIteratorState edge : createdEdges) {
             onProcessEdge(way, edge);
+        }
+        // store conditionals
+        storeConditionalAccess(acceptWay, createdEdges);
+        storeConditionalSpeed(edgeFlags, createdEdges);
+    }
+
+    protected void storeConditionalAccess(EncodingManager.AcceptWay acceptWay, List<EdgeIteratorState> createdEdges) {
+        if (acceptWay.hasConditional()) {
+            for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
+                String encoderName = encoder.toString();
+                if (acceptWay.getAccess(encoderName) == EncodingManager.Access.CONDITIONAL) {
+                    String value = ((AbstractFlagEncoder) encoder).getConditionalTagInspector().getTagValue();
+                    ((GraphHopperStorage) ghStorage).getConditionalAccess(encoderName).addEdges(createdEdges, value);
+                }
+            }
+        }
+    }
+
+    protected void storeConditionalSpeed(IntsRef edgeFlags, List<EdgeIteratorState> createdEdges) {
+        for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
+            String encoderName = encodingManager.getKey(encoder, "conditional_speed");
+
+            if (encodingManager.hasEncodedValue(encoderName) && encodingManager.getBooleanEncodedValue(encoderName).getBool(false, edgeFlags)) {
+                ConditionalSpeedInspector conditionalSpeedInspector = ((AbstractFlagEncoder) encoder).getConditionalSpeedInspector();
+
+                if (conditionalSpeedInspector.isConditionLazyEvaluated()) {
+                    String value = conditionalSpeedInspector.getTagValue();
+                    ((GraphHopperStorage) ghStorage).getConditionalSpeed(encoder).addEdges(createdEdges, value);
+                }
+            }
+        }
     }
         // ORS-GH MOD END
-    }
 
     // ORS-GH MOD START - Move the distance calculation to a separate method so it can be cleanly overridden
     protected void recordWayDistance(ReaderWay way, LongArrayList osmNodeIds) {
