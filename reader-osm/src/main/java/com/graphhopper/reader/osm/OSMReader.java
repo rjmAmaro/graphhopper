@@ -474,7 +474,7 @@ public class OSMReader implements DataReader {
 
     protected void storeConditionalSpeed(IntsRef edgeFlags, List<EdgeIteratorState> createdEdges) {
         for (FlagEncoder encoder : encodingManager.fetchEdgeEncoders()) {
-            String encoderName = encodingManager.getKey(encoder, "conditional_speed");
+            String encoderName = EncodingManager.getKey(encoder, ConditionalEdges.SPEED);
 
             if (encodingManager.hasEncodedValue(encoderName) && encodingManager.getBooleanEncodedValue(encoderName).getBool(false, edgeFlags)) {
                 ConditionalSpeedInspector conditionalSpeedInspector = ((AbstractFlagEncoder) encoder).getConditionalSpeedInspector();
