@@ -20,6 +20,7 @@ package com.graphhopper.routing.weighting;
 import com.graphhopper.routing.EdgeIteratorStateHelper;
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.HintsMap;
+import com.graphhopper.routing.util.SpeedCalculator;
 import com.graphhopper.routing.util.TurnCostEncoder;
 import com.graphhopper.storage.TurnCostExtension;
 import com.graphhopper.util.EdgeIterator;
@@ -178,5 +179,15 @@ public class TurnWeighting implements Weighting {
     @Override
     public boolean isTimeDependent() {
         return superWeighting.isTimeDependent();
+    }
+
+    @Override
+    public SpeedCalculator getSpeedCalculator() {
+        return superWeighting.getSpeedCalculator();
+    }
+
+    @Override
+    public void setSpeedCalculator(SpeedCalculator speedCalculator) {
+        superWeighting.setSpeedCalculator(speedCalculator);
     }
 }

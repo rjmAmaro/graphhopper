@@ -19,6 +19,7 @@ package com.graphhopper.routing.weighting;
 
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.HintsMap;
+import com.graphhopper.routing.util.SpeedCalculator;
 import com.graphhopper.util.EdgeIteratorState;
 
 /**
@@ -72,5 +73,15 @@ public abstract class AbstractAdjustedWeighting implements Weighting {
     @Override
     public boolean isTimeDependent() {
         return superWeighting.isTimeDependent();
+    }
+
+    @Override
+    public SpeedCalculator getSpeedCalculator() {
+        return superWeighting.getSpeedCalculator();
+    }
+
+    @Override
+    public void setSpeedCalculator(SpeedCalculator speedCalculator) {
+        superWeighting.setSpeedCalculator(speedCalculator);
     }
 }
