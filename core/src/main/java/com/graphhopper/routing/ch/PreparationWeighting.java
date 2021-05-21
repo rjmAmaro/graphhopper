@@ -19,6 +19,7 @@ package com.graphhopper.routing.ch;
 
 import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.util.HintsMap;
+import com.graphhopper.routing.util.SpeedCalculator;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.CHEdgeIteratorState;
 import com.graphhopper.util.EdgeIteratorState;
@@ -93,5 +94,15 @@ public class PreparationWeighting implements Weighting {
     @Override
     public boolean isTimeDependent() {
         return false;
+    }
+
+    @Override
+    public SpeedCalculator getSpeedCalculator() {
+        return userWeighting.getSpeedCalculator();
+    }
+
+    @Override
+    public void setSpeedCalculator(SpeedCalculator speedCalculator) {
+        userWeighting.setSpeedCalculator(speedCalculator);
     }
 }

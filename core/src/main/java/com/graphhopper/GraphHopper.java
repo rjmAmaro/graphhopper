@@ -918,9 +918,9 @@ public class GraphHopper implements GraphHopperAPI {
         }
 
         else if ("td_fastest".equalsIgnoreCase(weightingStr)) {
-            weighting = encodingManager.hasEncodedValue(EncodingManager.getKey(encoder, ConditionalEdges.SPEED))
-                    ? new TimeDependentFastestWeighting(encoder, hintsMap, new ConditionalSpeedCalculator(ghStorage, encoder))
-                    : new TimeDependentFastestWeighting(encoder, hintsMap);
+            weighting = new FastestWeighting(encoder, hintsMap);
+            if (encodingManager.hasEncodedValue(EncodingManager.getKey(encoder, ConditionalEdges.SPEED)))
+                weighting.setSpeedCalculator(new ConditionalSpeedCalculator(weighting.getSpeedCalculator(), ghStorage, encoder));
         }
 
         if (weighting == null)
