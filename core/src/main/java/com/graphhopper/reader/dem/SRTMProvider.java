@@ -84,6 +84,8 @@ public class SRTMProvider extends AbstractSRTMElevationProvider {
      * coordinate has.
      */
     private SRTMProvider init() {
+        System.out.println("\n\n\t!-!-!-!-!-!-!-!-!-!-!-!- SRTMProvider - init -!-!-!-!-!-!-!-!-!-!-!-!\n\n");
+
         try {
             String strs[] = {"Africa", "Australia", "Eurasia", "Islands", "North_America", "South_America"};
             for (String str : strs) {
